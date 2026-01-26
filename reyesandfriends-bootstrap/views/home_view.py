@@ -75,16 +75,13 @@ class HomeView(Gtk.Box):
         info.set_justify(Gtk.Justification.CENTER)
         self.pack_start(info, False, False, 0)
 
-        # Accesos rápidos
-        grid = Gtk.Grid()
-        grid.set_column_spacing(20)
-        grid.set_row_spacing(10)
-        grid.set_margin_top(16)
-        grid.set_margin_bottom(16)
-        grid.set_margin_start(0)
-        grid.set_margin_end(0)
-        grid.set_name("custom-grid")
+        btns_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        btns_box.set_halign(Gtk.Align.CENTER)
+        btns_box.set_valign(Gtk.Align.CENTER)
+        btns_box.set_margin_top(16)
+        btns_box.set_margin_bottom(16)
 
+        # Contraseñas
         btn_passwords_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         icon_passwords = Gtk.Image.new_from_icon_name("dialog-password", Gtk.IconSize.DIALOG)
         text_passwords_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
@@ -102,9 +99,9 @@ class HomeView(Gtk.Box):
         btn_passwords = Gtk.Button()
         btn_passwords.add(btn_passwords_box)
         btn_passwords.connect("clicked", lambda w: on_navigate and on_navigate("passwords"))
-        grid.attach(btn_passwords, 0, 0, 1, 1)
+        btns_box.pack_start(btn_passwords, False, False, 0)
 
-        # Botón Servidores HTTP
+        # Servidores HTTP
         btn_http_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         icon_http = Gtk.Image.new_from_icon_name("network-server", Gtk.IconSize.DIALOG)
         text_http_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
@@ -122,9 +119,9 @@ class HomeView(Gtk.Box):
         btn_http = Gtk.Button()
         btn_http.add(btn_http_box)
         btn_http.connect("clicked", lambda w: on_navigate and on_navigate("http"))
-        grid.attach(btn_http, 1, 0, 1, 1)
+        btns_box.pack_start(btn_http, False, False, 0)
 
-        # Botón Scripts SQL
+        # Scripts SQL
         btn_sql_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         icon_sql = Gtk.Image.new_from_icon_name("x-office-spreadsheet", Gtk.IconSize.DIALOG)
         text_sql_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
@@ -142,16 +139,9 @@ class HomeView(Gtk.Box):
         btn_sql = Gtk.Button()
         btn_sql.add(btn_sql_box)
         btn_sql.connect("clicked", lambda w: on_navigate and on_navigate("sql"))
-        grid.attach(btn_sql, 2, 0, 1, 1)
+        btns_box.pack_start(btn_sql, False, False, 0)
 
-        # Envolver el grid en un contenedor para limitar el ancho máximo
-        grid_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        grid_box.set_halign(Gtk.Align.CENTER)
-        grid_box.set_valign(Gtk.Align.CENTER)
-        grid_box.set_margin_top(0)
-        grid_box.set_margin_bottom(0)
-        grid_box.pack_start(grid, False, False, 0)
-        self.pack_start(grid_box, False, False, 0)
+        self.pack_start(btns_box, False, False, 0)
 
         current_year = date.today().year
 
