@@ -46,7 +46,7 @@ class ApacheView(Gtk.Box):
         list_frame = Gtk.Frame()
         list_frame.set_shadow_type(Gtk.ShadowType.IN)
         list_frame.set_size_request(-1, 180)
-        self.liststore = Gtk.ListStore(int, str, int, int, str)  # id, server_names, http_enabled, https_enabled, docroot
+        self.liststore = Gtk.ListStore(int, str, int, int, str, str, str, int)  # id, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http
         self._refresh_liststore()
         self.treeview = Gtk.TreeView(model=self.liststore)
         renderer_text = Gtk.CellRendererText()
@@ -54,10 +54,14 @@ class ApacheView(Gtk.Box):
         col2 = Gtk.TreeViewColumn("HTTP", renderer_text, text=2)
         col3 = Gtk.TreeViewColumn("HTTPS", renderer_text, text=3)
         col4 = Gtk.TreeViewColumn("Path", renderer_text, text=4)
+        col5 = Gtk.TreeViewColumn("SSL", renderer_text, text=5)
+        col6 = Gtk.TreeViewColumn("Redirect", renderer_text, text=7)
         self.treeview.append_column(col1)
         self.treeview.append_column(col2)
         self.treeview.append_column(col3)
         self.treeview.append_column(col4)
+        self.treeview.append_column(col5)
+        self.treeview.append_column(col6)
         select = self.treeview.get_selection()
         select.connect("changed", self._on_selection_changed)
         list_box = Gtk.ScrolledWindow()
@@ -90,17 +94,17 @@ class ApacheView(Gtk.Box):
     def _refresh_liststore(self):
         self.liststore.clear()
         for row in list_apache_configs():
-            # row: (id, server_names, http_enabled, https_enabled, docroot)
-            if len(row) == 3:
-                # Compatibilidad antigua: solo server_names, port, docroot
-                row = list(row)
-                row.insert(2, 1)  # http_enabled
-                row.insert(3, 0)  # https_enabled
-            elif len(row) == 4:
-                # Compatibilidad antigua: id, server_names, http_enabled, docroot
-                row = list(row)
-                row.insert(3, 0)  # https_enabled
-            self.liststore.append(list(row))
+            # row: (id, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http)
+            row = list(row)
+            # Compatibilidad hacia atrás
+            while len(row) < 8:
+                if len(row) == 5:
+                    row.append("certbot")  # ssl_preset
+                elif len(row) == 6:
+                    row.append("")         # ssl_cert
+                elif len(row) == 7:
+                    row.append(0)          # redirect_http
+            self.liststore.append(row)
 
     def _on_selection_changed(self, selection):
         model, treeiter = selection.get_selected()
@@ -113,8 +117,8 @@ class ApacheView(Gtk.Box):
         dialog = ApacheConfigDialog(self.get_toplevel(), "Nueva configuración")
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            server_names, http_enabled, https_enabled, docroot = dialog.get_data()
-            create_apache_config(server_names, http_enabled, https_enabled, docroot)
+            data = dialog.get_data()
+            create_apache_config(*data)
             self._refresh_liststore()
         dialog.destroy()
 
@@ -127,8 +131,8 @@ class ApacheView(Gtk.Box):
             dialog = ApacheConfigDialog(self.get_toplevel(), "Editar configuración", config)
             response = dialog.run()
             if response == Gtk.ResponseType.OK:
-                server_names, http_enabled, https_enabled, docroot = dialog.get_data()
-                update_apache_config(id_, server_names, http_enabled, https_enabled, docroot)
+                data = dialog.get_data()
+                update_apache_config(id_, *data)
                 self._refresh_liststore()
             dialog.destroy()
 
@@ -147,8 +151,8 @@ class ApacheView(Gtk.Box):
             id_ = model[treeiter][0]
             config = get_apache_config(id_)
             if config:
-                server_names, http_enabled, https_enabled, docroot = config[1], config[2], config[3], config[4]
-                conf_text = self._generate_apache_conf(server_names, http_enabled, https_enabled, docroot)
+                server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http = config[1], config[2], config[3], config[4], config[5], config[6], config[7]
+                conf_text = self._generate_apache_conf(server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http)
                 preview_dialog = ApacheConfPreviewDialog(self.get_toplevel(), conf_text)
                 response = preview_dialog.run()
                 if response == Gtk.ResponseType.OK:
@@ -181,12 +185,29 @@ class ApacheView(Gtk.Box):
         dialog.run()
         dialog.destroy()
 
-    def _generate_apache_conf(self, server_names, http_enabled, https_enabled, docroot):
-        # Genera un .conf para HTTP y/o HTTPS según selección
+    def _generate_apache_conf(self, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http):
         names = " ".join([n.strip() for n in server_names.split(",") if n.strip()])
         blocks = []
+        certfile = ""
+        keyfile = ""
+        if ssl_preset == "certbot":
+            certfile = f"/etc/letsencrypt/live/{names.split()[0]}/fullchain.pem"
+            keyfile = f"/etc/letsencrypt/live/{names.split()[0]}/privkey.pem"
+        elif ssl_preset == "snakeoil":
+            certfile = "/etc/ssl/certs/ssl-cert-snakeoil.pem"
+            keyfile = "/etc/ssl/private/ssl-cert-snakeoil.key"
+        elif ssl_preset == "custom":
+            certfile, keyfile = (ssl_cert or "").split("::") if "::" in (ssl_cert or "") else ("", "")
+
         if http_enabled:
-            blocks.append(f"""<VirtualHost *:80>
+            if https_enabled and redirect_http:
+                blocks.append(f"""<VirtualHost *:80>
+    ServerName {names.split()[0]}
+    ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}
+    Redirect permanent / https://{names.split()[0]}/
+</VirtualHost>""")
+            else:
+                blocks.append(f"""<VirtualHost *:80>
     ServerName {names.split()[0]}
     ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}
     DocumentRoot {docroot}
@@ -199,8 +220,8 @@ class ApacheView(Gtk.Box):
     ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}
     DocumentRoot {docroot}
     SSLEngine on
-    SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem
-    SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+    SSLCertificateFile {certfile}
+    SSLCertificateKeyFile {keyfile}
     ErrorLog ${{APACHE_LOG_DIR}}/error.log
     CustomLog ${{APACHE_LOG_DIR}}/access.log combined
 </VirtualHost>""")
@@ -212,7 +233,7 @@ class ApacheConfigDialog(Gtk.Dialog):
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_OK, Gtk.ResponseType.OK)
         )
-        self.set_default_size(350, 220)
+        self.set_default_size(400, 320)
         box = self.get_content_area()
         grid = Gtk.Grid(row_spacing=10, column_spacing=10, margin=10)
         box.add(grid)
@@ -221,35 +242,83 @@ class ApacheConfigDialog(Gtk.Dialog):
         lbl_names.set_halign(Gtk.Align.END)
         self.entry_names = Gtk.Entry()
         grid.attach(lbl_names, 0, 0, 1, 1)
-        grid.attach(self.entry_names, 1, 0, 1, 1)
+        grid.attach(self.entry_names, 1, 0, 2, 1)
 
         lbl_http = Gtk.Label(label="Habilitar HTTP (80):")
         lbl_http.set_halign(Gtk.Align.END)
         self.check_http = Gtk.CheckButton()
         grid.attach(lbl_http, 0, 1, 1, 1)
-        grid.attach(self.check_http, 1, 1, 1, 1)
+        grid.attach(self.check_http, 1, 1, 2, 1)
 
         lbl_https = Gtk.Label(label="Habilitar HTTPS (443):")
         lbl_https.set_halign(Gtk.Align.END)
         self.check_https = Gtk.CheckButton()
         grid.attach(lbl_https, 0, 2, 1, 1)
-        grid.attach(self.check_https, 1, 2, 1, 1)
+        grid.attach(self.check_https, 1, 2, 2, 1)
 
         lbl_docroot = Gtk.Label(label="Path del sitio (DocumentRoot):")
         lbl_docroot.set_halign(Gtk.Align.END)
         self.entry_docroot = Gtk.Entry()
         grid.attach(lbl_docroot, 0, 3, 1, 1)
-        grid.attach(self.entry_docroot, 1, 3, 1, 1)
+        grid.attach(self.entry_docroot, 1, 3, 2, 1)
 
+        # SSL preset
+        lbl_ssl = Gtk.Label(label="Certificado SSL:")
+        lbl_ssl.set_halign(Gtk.Align.END)
+        self.combo_ssl = Gtk.ComboBoxText()
+        self.combo_ssl.append("certbot", "Certbot (Let's Encrypt)")
+        self.combo_ssl.append("snakeoil", "Snakeoil (por defecto)")
+        self.combo_ssl.append("custom", "Personalizado")
+        grid.attach(lbl_ssl, 0, 4, 1, 1)
+        grid.attach(self.combo_ssl, 1, 4, 2, 1)
+
+        # SSL custom entry
+        lbl_ssl_custom = Gtk.Label(label="Ruta cert y key (custom):")
+        lbl_ssl_custom.set_halign(Gtk.Align.END)
+        self.entry_ssl_custom = Gtk.Entry()
+        self.entry_ssl_custom.set_placeholder_text("/ruta/cert.pem::/ruta/key.pem")
+        grid.attach(lbl_ssl_custom, 0, 5, 1, 1)
+        grid.attach(self.entry_ssl_custom, 1, 5, 2, 1)
+
+        # Redirect HTTP->HTTPS
+        self.check_redirect = Gtk.CheckButton(label="Redirigir HTTP a HTTPS")
+        grid.attach(self.check_redirect, 1, 6, 2, 1)
+
+        # Mostrar/ocultar campos según selección
+        def on_https_toggled(btn):
+            self.combo_ssl.set_sensitive(btn.get_active())
+            self.check_redirect.set_sensitive(btn.get_active())
+            if not btn.get_active():
+                self.combo_ssl.set_active(-1)
+                self.check_redirect.set_active(False)
+        self.check_https.connect("toggled", on_https_toggled)
+
+        def on_ssl_combo_changed(combo):
+            is_custom = combo.get_active_id() == "custom"
+            self.entry_ssl_custom.set_sensitive(is_custom)
+        self.combo_ssl.connect("changed", on_ssl_combo_changed)
+
+        # Inicialización de valores
         if config:
             self.entry_names.set_text(config[1])
             self.check_http.set_active(bool(config[2]))
             self.check_https.set_active(bool(config[3]))
             self.entry_docroot.set_text(config[4])
+            self.combo_ssl.set_active_id(config[5] or "certbot")
+            self.entry_ssl_custom.set_text(config[6] or "")
+            self.check_redirect.set_active(bool(config[7]))
         else:
             self.check_http.set_active(True)
             self.check_https.set_active(False)
             self.entry_docroot.set_text("/var/www/html")
+            self.combo_ssl.set_active_id("certbot")
+            self.entry_ssl_custom.set_text("")
+            self.check_redirect.set_active(False)
+
+        # Estado inicial de widgets
+        self.combo_ssl.set_sensitive(self.check_https.get_active())
+        self.check_redirect.set_sensitive(self.check_https.get_active())
+        self.entry_ssl_custom.set_sensitive(self.combo_ssl.get_active_id() == "custom")
 
         self.show_all()
 
@@ -258,7 +327,10 @@ class ApacheConfigDialog(Gtk.Dialog):
         http_enabled = self.check_http.get_active()
         https_enabled = self.check_https.get_active()
         docroot = self.entry_docroot.get_text().strip()
-        return names, http_enabled, https_enabled, docroot
+        ssl_preset = self.combo_ssl.get_active_id() or "certbot"
+        ssl_cert = self.entry_ssl_custom.get_text().strip() if ssl_preset == "custom" else ""
+        redirect_http = self.check_redirect.get_active()
+        return names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http
 
 class ApacheConfPreviewDialog(Gtk.Dialog):
     def __init__(self, parent, conf_text):
