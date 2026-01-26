@@ -46,16 +46,18 @@ class ApacheView(Gtk.Box):
         list_frame = Gtk.Frame()
         list_frame.set_shadow_type(Gtk.ShadowType.IN)
         list_frame.set_size_request(-1, 180)
-        self.liststore = Gtk.ListStore(int, str, int, str)  # id, server_names, port, docroot
+        self.liststore = Gtk.ListStore(int, str, int, int, str)  # id, server_names, http_enabled, https_enabled, docroot
         self._refresh_liststore()
         self.treeview = Gtk.TreeView(model=self.liststore)
         renderer_text = Gtk.CellRendererText()
         col1 = Gtk.TreeViewColumn("Dominios", renderer_text, text=1)
-        col2 = Gtk.TreeViewColumn("Puerto", renderer_text, text=2)
-        col3 = Gtk.TreeViewColumn("Path", renderer_text, text=3)
+        col2 = Gtk.TreeViewColumn("HTTP", renderer_text, text=2)
+        col3 = Gtk.TreeViewColumn("HTTPS", renderer_text, text=3)
+        col4 = Gtk.TreeViewColumn("Path", renderer_text, text=4)
         self.treeview.append_column(col1)
         self.treeview.append_column(col2)
         self.treeview.append_column(col3)
+        self.treeview.append_column(col4)
         select = self.treeview.get_selection()
         select.connect("changed", self._on_selection_changed)
         list_box = Gtk.ScrolledWindow()
@@ -88,10 +90,16 @@ class ApacheView(Gtk.Box):
     def _refresh_liststore(self):
         self.liststore.clear()
         for row in list_apache_configs():
-            # row: (id, server_names, port) o (id, server_names, port, docroot)
+            # row: (id, server_names, http_enabled, https_enabled, docroot)
             if len(row) == 3:
-                # Si falta el docroot, ponemos un valor por defecto
-                row = list(row) + ["/var/www/html"]
+                # Compatibilidad antigua: solo server_names, port, docroot
+                row = list(row)
+                row.insert(2, 1)  # http_enabled
+                row.insert(3, 0)  # https_enabled
+            elif len(row) == 4:
+                # Compatibilidad antigua: id, server_names, http_enabled, docroot
+                row = list(row)
+                row.insert(3, 0)  # https_enabled
             self.liststore.append(list(row))
 
     def _on_selection_changed(self, selection):
@@ -105,8 +113,8 @@ class ApacheView(Gtk.Box):
         dialog = ApacheConfigDialog(self.get_toplevel(), "Nueva configuración")
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            server_names, port, docroot = dialog.get_data()
-            create_apache_config(server_names, port, docroot)
+            server_names, http_enabled, https_enabled, docroot = dialog.get_data()
+            create_apache_config(server_names, http_enabled, https_enabled, docroot)
             self._refresh_liststore()
         dialog.destroy()
 
@@ -119,8 +127,8 @@ class ApacheView(Gtk.Box):
             dialog = ApacheConfigDialog(self.get_toplevel(), "Editar configuración", config)
             response = dialog.run()
             if response == Gtk.ResponseType.OK:
-                server_names, port, docroot = dialog.get_data()
-                update_apache_config(id_, server_names, port, docroot)
+                server_names, http_enabled, https_enabled, docroot = dialog.get_data()
+                update_apache_config(id_, server_names, http_enabled, https_enabled, docroot)
                 self._refresh_liststore()
             dialog.destroy()
 
@@ -139,8 +147,8 @@ class ApacheView(Gtk.Box):
             id_ = model[treeiter][0]
             config = get_apache_config(id_)
             if config:
-                server_names, port, docroot = config[1], config[2], config[3]
-                conf_text = self._generate_apache_conf(server_names, port, docroot)
+                server_names, http_enabled, https_enabled, docroot = config[1], config[2], config[3], config[4]
+                conf_text = self._generate_apache_conf(server_names, http_enabled, https_enabled, docroot)
                 preview_dialog = ApacheConfPreviewDialog(self.get_toplevel(), conf_text)
                 response = preview_dialog.run()
                 if response == Gtk.ResponseType.OK:
@@ -173,17 +181,30 @@ class ApacheView(Gtk.Box):
         dialog.run()
         dialog.destroy()
 
-    def _generate_apache_conf(self, server_names, port, docroot):
-        # Genera un .conf básico para Apache
+    def _generate_apache_conf(self, server_names, http_enabled, https_enabled, docroot):
+        # Genera un .conf para HTTP y/o HTTPS según selección
         names = " ".join([n.strip() for n in server_names.split(",") if n.strip()])
-        return f"""<VirtualHost *:{port}>
+        blocks = []
+        if http_enabled:
+            blocks.append(f"""<VirtualHost *:80>
     ServerName {names.split()[0]}
     ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}
     DocumentRoot {docroot}
     ErrorLog ${{APACHE_LOG_DIR}}/error.log
     CustomLog ${{APACHE_LOG_DIR}}/access.log combined
-</VirtualHost>
-"""
+</VirtualHost>""")
+        if https_enabled:
+            blocks.append(f"""<VirtualHost *:443>
+    ServerName {names.split()[0]}
+    ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}
+    DocumentRoot {docroot}
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem
+    SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+    ErrorLog ${{APACHE_LOG_DIR}}/error.log
+    CustomLog ${{APACHE_LOG_DIR}}/access.log combined
+</VirtualHost>""")
+        return "\n\n".join(blocks)
 
 class ApacheConfigDialog(Gtk.Dialog):
     def __init__(self, parent, title, config=None):
@@ -191,7 +212,7 @@ class ApacheConfigDialog(Gtk.Dialog):
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_OK, Gtk.ResponseType.OK)
         )
-        self.set_default_size(350, 180)
+        self.set_default_size(350, 220)
         box = self.get_content_area()
         grid = Gtk.Grid(row_spacing=10, column_spacing=10, margin=10)
         box.add(grid)
@@ -202,33 +223,42 @@ class ApacheConfigDialog(Gtk.Dialog):
         grid.attach(lbl_names, 0, 0, 1, 1)
         grid.attach(self.entry_names, 1, 0, 1, 1)
 
-        lbl_port = Gtk.Label(label="Puerto (80 o 443):")
-        lbl_port.set_halign(Gtk.Align.END)
-        self.entry_port = Gtk.Entry()
-        grid.attach(lbl_port, 0, 1, 1, 1)
-        grid.attach(self.entry_port, 1, 1, 1, 1)
+        lbl_http = Gtk.Label(label="Habilitar HTTP (80):")
+        lbl_http.set_halign(Gtk.Align.END)
+        self.check_http = Gtk.CheckButton()
+        grid.attach(lbl_http, 0, 1, 1, 1)
+        grid.attach(self.check_http, 1, 1, 1, 1)
+
+        lbl_https = Gtk.Label(label="Habilitar HTTPS (443):")
+        lbl_https.set_halign(Gtk.Align.END)
+        self.check_https = Gtk.CheckButton()
+        grid.attach(lbl_https, 0, 2, 1, 1)
+        grid.attach(self.check_https, 1, 2, 1, 1)
 
         lbl_docroot = Gtk.Label(label="Path del sitio (DocumentRoot):")
         lbl_docroot.set_halign(Gtk.Align.END)
         self.entry_docroot = Gtk.Entry()
-        grid.attach(lbl_docroot, 0, 2, 1, 1)
-        grid.attach(self.entry_docroot, 1, 2, 1, 1)
+        grid.attach(lbl_docroot, 0, 3, 1, 1)
+        grid.attach(self.entry_docroot, 1, 3, 1, 1)
 
         if config:
             self.entry_names.set_text(config[1])
-            self.entry_port.set_text(str(config[2]))
-            self.entry_docroot.set_text(config[3])
+            self.check_http.set_active(bool(config[2]))
+            self.check_https.set_active(bool(config[3]))
+            self.entry_docroot.set_text(config[4])
         else:
-            self.entry_port.set_text("80")
+            self.check_http.set_active(True)
+            self.check_https.set_active(False)
             self.entry_docroot.set_text("/var/www/html")
 
         self.show_all()
 
     def get_data(self):
         names = self.entry_names.get_text().strip()
-        port = int(self.entry_port.get_text().strip())
+        http_enabled = self.check_http.get_active()
+        https_enabled = self.check_https.get_active()
         docroot = self.entry_docroot.get_text().strip()
-        return names, port, docroot
+        return names, http_enabled, https_enabled, docroot
 
 class ApacheConfPreviewDialog(Gtk.Dialog):
     def __init__(self, parent, conf_text):
