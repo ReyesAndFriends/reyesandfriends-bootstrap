@@ -104,7 +104,6 @@ class MainWindow(Gtk.Window):
 
     def _navigate_to(self, view_name):
         self.stack.set_visible_child_name(view_name)
-        # Selecciona el row correspondiente en el sidebar
         for idx, (_, name) in enumerate(self.sidebar_items):
             if name == view_name:
                 self.sidebar_list.select_row(self.sidebar_list.get_row_at_index(idx))
