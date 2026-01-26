@@ -6,24 +6,18 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib
 
 
-class SqlScriptsView(Gtk.Window):
-    """Vista para gestión y ejecución de scripts SQL"""
-    
-    def __init__(self, parent):
-        super().__init__(title="SQL Scripts")
-        self.set_transient_for(parent)
-        self.set_modal(True)
-        self.set_default_size(700, 500)
+class SqlScriptsView(Gtk.Box):
+    """Vista para gestión y ejecución de scripts SQL (widget)"""
+    def __init__(self):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.set_border_width(20)
-        self.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
-        
-        # Crear el layout
+        self.set_hexpand(True)
+        self.set_vexpand(True)
         self._create_layout()
         
     def _create_layout(self):
         """Crear el layout de la vista"""
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        self.add(vbox)
+        vbox = self
         
         # Título
         title_label = Gtk.Label()
@@ -131,11 +125,8 @@ class SqlScriptsView(Gtk.Window):
         vbox.pack_start(hbox_buttons, False, False, 0)
         
         # Botón cerrar
-        btn_close = Gtk.Button(label="Cerrar")
-        btn_close.connect("clicked", lambda w: self.destroy())
-        vbox.pack_start(btn_close, False, False, 0)
-        
-        self.show_all()
+        # El botón cerrar ya no es necesario en modo embebido
+        # self.show_all() ya no es necesario
         
     def on_execute_clicked(self, widget):
         """Ejecutar script SQL"""

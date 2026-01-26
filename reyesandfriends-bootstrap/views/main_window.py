@@ -1,100 +1,129 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 
 from .passwords_view import PasswordsView
 from .http_servers_view import HttpServersView
 from .sql_scripts_view import SqlScriptsView
+from .home_view import HomeView
 
 
 class MainWindow(Gtk.Window):
-    """Ventana principal de la aplicación con menú de navegación"""
-    
     def __init__(self):
         super().__init__(title="Menu Principal")
-        self.set_border_width(20)
-        self.set_default_size(400, 500)
+        self.set_default_size(900, 600)
         self.set_position(Gtk.WindowPosition.CENTER)
-        
-        # Crear el layout principal
+
+        self._load_css()
+        self._create_headerbar()
         self._create_layout()
-        
+
+    # ---------------- HEADERBAR ----------------
+
+    def _create_headerbar(self):
+        header = Gtk.HeaderBar()
+        header.set_show_close_button(True)
+        header.set_title("Menu Principal")
+        header.get_style_context().add_class("header")
+        self.set_titlebar(header)
+
+    # ---------------- LAYOUT ----------------
+
     def _create_layout(self):
-        """Crear el layout de la ventana principal"""
-        # Crear un box vertical para organizar los elementos
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
-        self.add(vbox)
-        
-        # Título de la aplicación
-        title_label = Gtk.Label()
-        title_label.set_markup("<big><b>Menú Principal</b></big>")
-        title_label.set_margin_bottom(20)
-        vbox.pack_start(title_label, False, False, 0)
-        
-        # Botón Passwords
-        btn_passwords = Gtk.Button(label="Passwords")
-        btn_passwords.set_size_request(-1, 60)
-        btn_passwords.connect("clicked", self.on_passwords_clicked)
-        vbox.pack_start(btn_passwords, False, False, 0)
-        
-        # Botón HTTP Servers
-        btn_http = Gtk.Button(label="HTTP Servers")
-        btn_http.set_size_request(-1, 60)
-        btn_http.connect("clicked", self.on_http_servers_clicked)
-        vbox.pack_start(btn_http, False, False, 0)
-        
-        # Botón SQL Scripts
-        btn_sql = Gtk.Button(label="SQL Scripts")
-        btn_sql.set_size_request(-1, 60)
-        btn_sql.connect("clicked", self.on_sql_scripts_clicked)
-        vbox.pack_start(btn_sql, False, False, 0)
-        
-        # Botón About
-        btn_about = Gtk.Button(label="About")
-        btn_about.set_size_request(-1, 60)
-        btn_about.connect("clicked", self.on_about_clicked)
-        vbox.pack_start(btn_about, False, False, 0)
-        
-        # Separador
-        separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-        vbox.pack_start(separator, False, False, 10)
-        
-        # Botón Salir
-        btn_exit = Gtk.Button(label="Salir")
-        btn_exit.connect("clicked", self.on_exit_clicked)
-        vbox.pack_start(btn_exit, False, False, 0)
-        
-    def on_passwords_clicked(self, widget):
-        """Abrir ventana de gestión de contraseñas"""
-        passwords_view = PasswordsView(self)
-        passwords_view.show()
-    
-    def on_http_servers_clicked(self, widget):
-        """Abrir ventana de servidores HTTP"""
-        http_view = HttpServersView(self)
-        http_view.show()
-    
-    def on_sql_scripts_clicked(self, widget):
-        """Abrir ventana de scripts SQL"""
-        sql_view = SqlScriptsView(self)
-        sql_view.show()
-    
-    def on_about_clicked(self, widget):
-        """Mostrar diálogo About"""
-        about_dialog = Gtk.AboutDialog(transient_for=self, modal=True)
-        about_dialog.set_program_name("Menu Principal GTK")
-        about_dialog.set_version("1.0.0")
-        about_dialog.set_authors(["Astronaut Markus"])
-        about_dialog.set_comments("Aplicación de menú con GTK y Python")
-        about_dialog.set_website("https://www.gtk.org")
-        about_dialog.set_website_label("GTK Website")
-        about_dialog.set_license_type(Gtk.License.MIT_X11)
-        about_dialog.run()
-        about_dialog.destroy()
-    
-    def on_exit_clicked(self, widget):
-        """Salir de la aplicación"""
+        root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.add(root)
+
+        # -------- Sidebar --------
+        sidebar_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        sidebar_container.set_size_request(200, -1)
+        sidebar_container.get_style_context().add_class("sidebar")
+
+        self.stack = Gtk.Stack(
+            transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT,
+            transition_duration=250
+        )
+
+        sidebar = Gtk.StackSidebar()
+        sidebar.set_stack(self.stack)
+        sidebar.set_vexpand(True)
+        sidebar.get_style_context().add_class("sidebar-nav")
+
+        sidebar_container.pack_start(sidebar, True, True, 0)
+
+        separator = Gtk.Separator(orientation=Gtk.Orientation.VERTICAL)
+
+        # -------- Stack Views --------
+        self._create_views()
+
+        root.pack_start(sidebar_container, False, False, 0)
+        root.pack_start(separator, False, False, 0)
+        root.pack_start(self.stack, True, True, 0)
+
+        self.stack.set_visible_child_name("home")
+
+    # ---------------- VIEWS ----------------
+
+    def _create_views(self):
+        self.home_view = HomeView(on_navigate=self._navigate_to)
+        self.passwords_view = PasswordsView()
+        self.http_servers_view = HttpServersView()
+        self.sql_scripts_view = SqlScriptsView()
+
+        self.stack.add_titled(self.home_view, "home", "Inicio")
+        self.stack.add_titled(self.passwords_view, "passwords", "Contraseñas")
+        self.stack.add_titled(self.http_servers_view, "http", "HTTP Servers")
+        self.stack.add_titled(self.sql_scripts_view, "sql", "SQL Scripts")
+
+        about = self._create_about_view()
+        self.stack.add_titled(about, "about", "Acerca de")
+
+    def _create_about_view(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        box.set_margin_top(40)
+
+        label = Gtk.Label()
+        label.set_markup(
+            "<big><b>Menu Principal GTK</b></big>\n\n"
+            "Versión 1.0.0\n"
+            "Autor: Reyes&amp;Friends\n\n"
+            "<a href='https://www.gtk.org'>https://www.gtk.org</a>"
+        )
+        label.set_justify(Gtk.Justification.CENTER)
+
+        box.pack_start(label, True, True, 0)
+        return box
+
+    # ---------------- HELPERS ----------------
+
+    def _navigate_to(self, view_name):
+        self.stack.set_visible_child_name(view_name)
+
+    def on_exit_clicked(self, *_):
         Gtk.main_quit()
+
+    def _load_css(self):
+        css = b"""
+        .sidebar {
+            padding: 10px;
+        }
+
+        .sidebar-nav row {
+            padding: 10px;
+        }
+
+        .sidebar-nav row:selected {
+            color: white;
+        }
+
+        .header {
+            background: #2a2a2a;
+        }
+        """
+
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
