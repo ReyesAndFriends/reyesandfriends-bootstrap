@@ -46,14 +46,16 @@ class ApacheView(Gtk.Box):
         list_frame = Gtk.Frame()
         list_frame.set_shadow_type(Gtk.ShadowType.IN)
         list_frame.set_size_request(-1, 180)
-        self.liststore = Gtk.ListStore(int, str, int)  # id, server_names, port
+        self.liststore = Gtk.ListStore(int, str, int, str)  # id, server_names, port, docroot
         self._refresh_liststore()
         self.treeview = Gtk.TreeView(model=self.liststore)
         renderer_text = Gtk.CellRendererText()
         col1 = Gtk.TreeViewColumn("Dominios", renderer_text, text=1)
         col2 = Gtk.TreeViewColumn("Puerto", renderer_text, text=2)
+        col3 = Gtk.TreeViewColumn("Path", renderer_text, text=3)
         self.treeview.append_column(col1)
         self.treeview.append_column(col2)
+        self.treeview.append_column(col3)
         select = self.treeview.get_selection()
         select.connect("changed", self._on_selection_changed)
         list_box = Gtk.ScrolledWindow()
@@ -86,6 +88,10 @@ class ApacheView(Gtk.Box):
     def _refresh_liststore(self):
         self.liststore.clear()
         for row in list_apache_configs():
+            # row: (id, server_names, port) o (id, server_names, port, docroot)
+            if len(row) == 3:
+                # Si falta el docroot, ponemos un valor por defecto
+                row = list(row) + ["/var/www/html"]
             self.liststore.append(list(row))
 
     def _on_selection_changed(self, selection):
@@ -99,8 +105,8 @@ class ApacheView(Gtk.Box):
         dialog = ApacheConfigDialog(self.get_toplevel(), "Nueva configuración")
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            server_names, port = dialog.get_data()
-            create_apache_config(server_names, port)
+            server_names, port, docroot = dialog.get_data()
+            create_apache_config(server_names, port, docroot)
             self._refresh_liststore()
         dialog.destroy()
 
@@ -113,8 +119,8 @@ class ApacheView(Gtk.Box):
             dialog = ApacheConfigDialog(self.get_toplevel(), "Editar configuración", config)
             response = dialog.run()
             if response == Gtk.ResponseType.OK:
-                server_names, port = dialog.get_data()
-                update_apache_config(id_, server_names, port)
+                server_names, port, docroot = dialog.get_data()
+                update_apache_config(id_, server_names, port, docroot)
                 self._refresh_liststore()
             dialog.destroy()
 
@@ -133,8 +139,8 @@ class ApacheView(Gtk.Box):
             id_ = model[treeiter][0]
             config = get_apache_config(id_)
             if config:
-                server_names, port = config[1], config[2]
-                conf_text = self._generate_apache_conf(server_names, port)
+                server_names, port, docroot = config[1], config[2], config[3]
+                conf_text = self._generate_apache_conf(server_names, port, docroot)
                 preview_dialog = ApacheConfPreviewDialog(self.get_toplevel(), conf_text)
                 response = preview_dialog.run()
                 if response == Gtk.ResponseType.OK:
@@ -167,13 +173,13 @@ class ApacheView(Gtk.Box):
         dialog.run()
         dialog.destroy()
 
-    def _generate_apache_conf(self, server_names, port):
+    def _generate_apache_conf(self, server_names, port, docroot):
         # Genera un .conf básico para Apache
         names = " ".join([n.strip() for n in server_names.split(",") if n.strip()])
         return f"""<VirtualHost *:{port}>
     ServerName {names.split()[0]}
     ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}
-    DocumentRoot /var/www/html
+    DocumentRoot {docroot}
     ErrorLog ${{APACHE_LOG_DIR}}/error.log
     CustomLog ${{APACHE_LOG_DIR}}/access.log combined
 </VirtualHost>
@@ -185,7 +191,7 @@ class ApacheConfigDialog(Gtk.Dialog):
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_OK, Gtk.ResponseType.OK)
         )
-        self.set_default_size(350, 120)
+        self.set_default_size(350, 180)
         box = self.get_content_area()
         grid = Gtk.Grid(row_spacing=10, column_spacing=10, margin=10)
         box.add(grid)
@@ -202,18 +208,27 @@ class ApacheConfigDialog(Gtk.Dialog):
         grid.attach(lbl_port, 0, 1, 1, 1)
         grid.attach(self.entry_port, 1, 1, 1, 1)
 
+        lbl_docroot = Gtk.Label(label="Path del sitio (DocumentRoot):")
+        lbl_docroot.set_halign(Gtk.Align.END)
+        self.entry_docroot = Gtk.Entry()
+        grid.attach(lbl_docroot, 0, 2, 1, 1)
+        grid.attach(self.entry_docroot, 1, 2, 1, 1)
+
         if config:
             self.entry_names.set_text(config[1])
             self.entry_port.set_text(str(config[2]))
+            self.entry_docroot.set_text(config[3])
         else:
             self.entry_port.set_text("80")
+            self.entry_docroot.set_text("/var/www/html")
 
         self.show_all()
 
     def get_data(self):
         names = self.entry_names.get_text().strip()
         port = int(self.entry_port.get_text().strip())
-        return names, port
+        docroot = self.entry_docroot.get_text().strip()
+        return names, port, docroot
 
 class ApacheConfPreviewDialog(Gtk.Dialog):
     def __init__(self, parent, conf_text):
