@@ -45,7 +45,6 @@ class ApacheView(Gtk.Box):
 
         list_frame = Gtk.Frame()
         list_frame.set_shadow_type(Gtk.ShadowType.IN)
-        list_frame.set_size_request(-1, 180)
         self.liststore = Gtk.ListStore(int, str, int, int, str, str, str, int, int, str)  
         # id, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target
         self._refresh_liststore()
@@ -80,9 +79,11 @@ class ApacheView(Gtk.Box):
         select.connect("changed", self._on_selection_changed)
         list_box = Gtk.ScrolledWindow()
         list_box.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        list_box.set_vexpand(False) 
+        list_box.set_size_request(-1, 220)
         list_box.add(self.treeview)
         list_frame.add(list_box)
-        crud_box.pack_start(list_frame, True, True, 0)
+        crud_box.pack_start(list_frame, False, False, 0)
 
         btns_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         self.btn_nueva = Gtk.Button(label="Nueva")
