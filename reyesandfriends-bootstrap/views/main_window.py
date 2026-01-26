@@ -12,54 +12,34 @@ class MainWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="Inicio - Reyes&Friends Bootstrap")
 
-        display = Gdk.Display.get_default()
-        monitor = None
-        if display is not None:
-            try:
-                monitor = display.get_primary_monitor()
-            except Exception:
-                monitor = None
-            if monitor is None:
-                try:
-                    monitor = display.get_monitor(0)
-                except Exception:
-                    monitor = None
+        # --- Responsive 16:9 ---
+        screen = Gdk.Screen.get_default()
+        monitor_w = screen.get_width()
+        monitor_h = screen.get_height()
 
-        monitor_w = monitor_h = None
-        if monitor is not None:
-            try:
-                geom = monitor.get_geometry()
-                try:
-                    scale = monitor.get_scale_factor()
-                except Exception:
-                    scale = 1
-                monitor_w = int(geom.width * scale)
-                monitor_h = int(geom.height * scale)
-            except Exception:
-                monitor_w = monitor_h = None
+        max_width_by_height = int(monitor_h * 16 / 9)
+        max_height_by_width = int(monitor_w * 9 / 16)
 
-        if monitor_w is None or monitor_h is None:
-            try:
-                screen = Gdk.Screen.get_default()
-            except Exception:
-                screen = None
-            if screen is not None:
-                try:
-                    monitor_w = int(screen.get_width())
-                    monitor_h = int(screen.get_height())
-                except Exception:
-                    monitor_w, monitor_h = 800, 600
-            else:
-                monitor_w, monitor_h = 800, 600
+        if max_width_by_height <= monitor_w:
+            target_w = max_width_by_height
+            target_h = monitor_h
+        else:
+            target_w = monitor_w
+            target_h = max_height_by_width
 
-        TARGET_W, TARGET_H = 1024, 768
-        target_w = min(TARGET_W, monitor_w)
-        target_h = min(TARGET_H, monitor_h)
+        min_w, min_h = 640, 360
+
         self.set_default_size(target_w, target_h)
+        self.set_resizable(True)
 
-        req_w = min(600, target_w)
-        req_h = min(400, target_h)
-        self.set_size_request(req_w, req_h)
+        geometry = Gdk.Geometry()
+        geometry.min_width = min_w
+        geometry.min_height = min_h
+        geometry.max_width = target_w
+        geometry.max_height = target_h
+        self.set_geometry_hints(self, geometry,
+            Gdk.WindowHints.MIN_SIZE | Gdk.WindowHints.MAX_SIZE)
+
         self.set_position(Gtk.WindowPosition.CENTER)
 
         self._create_headerbar()

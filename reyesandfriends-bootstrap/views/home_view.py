@@ -12,10 +12,12 @@ class HomeView(Gtk.Box):
         self.set_hexpand(True)
         self.set_vexpand(True)
 
-        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-        header_box.set_size_request(-1, 160)
-        header_box.set_hexpand(True)
-        header_box.set_name("custom-header")
+        header_grid = Gtk.Grid()
+        header_grid.set_column_spacing(20)
+        header_grid.set_row_spacing(0)
+        header_grid.set_hexpand(True)
+        header_grid.set_vexpand(False)
+        header_grid.set_name("custom-header")
 
         icon_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
@@ -25,7 +27,9 @@ class HomeView(Gtk.Box):
         pixbuf = GdkPixbuf.Pixbuf.new_from_file(icon_path)
         pixbuf = pixbuf.scale_simple(48, 48, GdkPixbuf.InterpType.BILINEAR)
         icon = Gtk.Image.new_from_pixbuf(pixbuf)
-        header_box.pack_start(icon, False, False, 0)
+        icon.set_halign(Gtk.Align.START)
+        icon.set_valign(Gtk.Align.CENTER)
+        header_grid.attach(icon, 0, 0, 1, 1)
 
         text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         label_title = Gtk.Label()
@@ -36,17 +40,16 @@ class HomeView(Gtk.Box):
         label_desc.set_justify(Gtk.Justification.LEFT)
         text_box.pack_start(label_title, False, False, 0)
         text_box.pack_start(label_desc, False, False, 0)
-        header_box.pack_start(text_box, True, True, 0)
+        text_box.set_hexpand(True)
+        header_grid.attach(text_box, 1, 0, 1, 1)
 
-        header_align = Gtk.Alignment.new(0.5, 0, 1, 1)
-        header_align.add(header_box)
-        self.pack_start(header_align, False, False, 0)
+        self.pack_start(header_grid, False, False, 0)
 
         css = b"""
         #custom-header {
             background-image: linear-gradient(90deg,rgba(128, 27, 27, 1) 0%, rgba(166, 28, 28, 1) 50%, rgba(128, 24, 24, 1) 100%);
             border-radius: 12px;
-            padding: 40px 32px;  /* padding vertical aumentado */
+            padding: 40px 32px;
         }
         #custom-header label {
             color: #fff;
