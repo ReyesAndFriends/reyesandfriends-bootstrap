@@ -44,7 +44,7 @@ class HomeView(Gtk.Box):
 
         css = b"""
         #custom-header {
-            background-image: linear-gradient(90deg, #8B0000 0%, #B22222 100%);
+            background-image: linear-gradient(90deg,rgba(128, 27, 27, 1) 0%, rgba(166, 28, 28, 1) 50%, rgba(128, 24, 24, 1) 100%);
             border-radius: 12px;
             padding: 40px 32px;  /* padding vertical aumentado */
         }
@@ -62,13 +62,14 @@ class HomeView(Gtk.Box):
 
         # Título
         title = Gtk.Label()
-        title.set_markup("<big><b>Bienvenido a la App</b></big>")
+        title.set_markup("<big><b>Te damos la bienvenida</b></big>")
         title.set_justify(Gtk.Justification.CENTER)
-        title.set_margin_bottom(20)
+        title.set_margin_top(10)
+        title.set_margin_bottom(10)
         self.pack_start(title, False, False, 0)
 
         # Info
-        info = Gtk.Label(label="Selecciona una opción del menú lateral o usa los accesos rápidos.")
+        info = Gtk.Label(label="Selecciona una de las siguientes opciones para comenzar:")
         info.set_justify(Gtk.Justification.CENTER)
         self.pack_start(info, False, False, 0)
 
@@ -77,14 +78,8 @@ class HomeView(Gtk.Box):
         grid.set_column_spacing(20)
         grid.set_row_spacing(10)
 
-        # Botón Gestión de Contraseñas
         btn_passwords_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        icon_passwords = Gtk.Image.new_from_file(
-            os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                "assets", "icons", "reyesandfriends_crown.svg"
-            )
-        )
+        icon_passwords = Gtk.Image.new_from_icon_name("dialog-password", Gtk.IconSize.DIALOG)
         text_passwords_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         label_passwords_title = Gtk.Label()
         label_passwords_title.set_markup("<b>Gestión de Contraseñas</b>")
@@ -110,7 +105,7 @@ class HomeView(Gtk.Box):
         label_http_title = Gtk.Label()
         label_http_title.set_markup("<b>Servidores HTTP</b>")
         label_http_title.set_xalign(0)
-        label_http_desc = Gtk.Label(label="Gestiona y monitorea tus servidores web.")
+        label_http_desc = Gtk.Label(label="Configura y genera configuraciones para servidores HTTP como Apache o Nginx.")
         label_http_desc.set_xalign(0)
         label_http_desc.set_justify(Gtk.Justification.LEFT)
         label_http_desc.set_margin_top(2)
@@ -131,7 +126,7 @@ class HomeView(Gtk.Box):
         label_sql_title = Gtk.Label()
         label_sql_title.set_markup("<b>Scripts SQL</b>")
         label_sql_title.set_xalign(0)
-        label_sql_desc = Gtk.Label(label="Ejecuta y administra scripts de bases de datos.")
+        label_sql_desc = Gtk.Label(label="Crea scripts SQL personalizados para la creación de bases de datos, usuarios y permisos.")
         label_sql_desc.set_xalign(0)
         label_sql_desc.set_justify(Gtk.Justification.LEFT)
         label_sql_desc.set_margin_top(2)
