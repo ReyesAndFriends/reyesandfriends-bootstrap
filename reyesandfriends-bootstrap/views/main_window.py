@@ -6,6 +6,8 @@ from .http_servers_view import HttpServersView
 from .sql_scripts_view import SqlScriptsView
 from .home_view import HomeView
 from .about_view import AboutView 
+from .servers.apache_view import ApacheView
+from .servers.nginx_view import NginxView
 
 
 class MainWindow(Gtk.Window):
@@ -120,12 +122,16 @@ class MainWindow(Gtk.Window):
     def _create_views(self):
         self.home_view = HomeView(on_navigate=self._navigate_to)
         self.passwords_view = PasswordsView()
-        self.http_servers_view = HttpServersView()
+        self.http_servers_view = HttpServersView(on_navigate=self._navigate_to)
         self.sql_scripts_view = SqlScriptsView()
         self.stack.add_titled(self.home_view, "home", "Inicio")
         self.stack.add_titled(self.passwords_view, "passwords", "Gestión de Contraseñas")
         self.stack.add_titled(self.http_servers_view, "http", "Servidores HTTP")
         self.stack.add_titled(self.sql_scripts_view, "sql", "Scripts SQL")
+        self.apache_view = ApacheView()
+        self.stack.add_titled(self.apache_view, "apache", "Apache")
+        self.nginx_view = NginxView()
+        self.stack.add_titled(self.nginx_view, "nginx", "Nginx")
         about = AboutView()
         self.stack.add_titled(about, "about", "Acerca de")
 
