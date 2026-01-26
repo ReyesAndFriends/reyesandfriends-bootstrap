@@ -140,10 +140,63 @@ class ApacheView(Gtk.Box):
         if treeiter:
             id_ = model[treeiter][0]
             config = get_apache_config(id_)
+            # Guardar el nombre principal antes de editar
+            old_server_names = config[1]
+            old_main_name = [n.strip() for n in old_server_names.split(",") if n.strip()][0] if old_server_names else None
+            old_conf_filename = f"{old_main_name}.conf" if old_main_name else None
+            workdir = get_workdir()
+            apache_dir = os.path.join(workdir, "http-configs", "apache")
+            old_conf_path = os.path.join(apache_dir, old_conf_filename) if old_conf_filename else None
+            file_exists = old_conf_path and os.path.isfile(old_conf_path)
+
             dialog = ApacheConfigDialog(self.get_toplevel(), "Editar configuración", config)
             response = dialog.run()
             if response == Gtk.ResponseType.OK:
                 data = dialog.get_data()
+                new_server_names = data[0]
+                new_main_name = [n.strip() for n in new_server_names.split(",") if n.strip()][0] if new_server_names else None
+                new_conf_filename = f"{new_main_name}.conf" if new_main_name else None
+                new_conf_path = os.path.join(apache_dir, new_conf_filename) if new_conf_filename else None
+
+                # Si el nombre principal cambió y el archivo viejo existe
+                if file_exists and old_main_name != new_main_name:
+                    dialog_conf = Gtk.MessageDialog(
+                        transient_for=self.get_toplevel(),
+                        flags=0,
+                        message_type=Gtk.MessageType.QUESTION,
+                        buttons=Gtk.ButtonsType.NONE,
+                        text=f"El archivo de configuración anterior existe:\n{old_conf_path}\n¿Qué desea hacer?"
+                    )
+                    btn_rename = dialog_conf.add_button("Renombrar", 1)
+                    btn_ignore = dialog_conf.add_button("Ignorar", 2)
+                    btn_delete = dialog_conf.add_button("Borrar", 3)
+                    dialog_conf.set_default_response(2)
+                    response_conf = dialog_conf.run()
+                    dialog_conf.destroy()
+                    if response_conf == 1:
+                        # Renombrar el archivo al nuevo nombre y sobreescribir con la nueva configuración
+                        try:
+                            # Generar la nueva configuración
+                            conf_text = self._generate_apache_conf(*data)
+                            if os.path.isfile(new_conf_path):
+                                os.remove(new_conf_path)
+                            os.rename(old_conf_path, new_conf_path)
+                            with open(new_conf_path, "w") as f:
+                                f.write(conf_text)
+                            self._show_notification(f"Archivo renombrado y actualizado:\n{new_conf_path}")
+                        except Exception as e:
+                            self._show_notification(f"Error al renombrar o actualizar:\n{e}")
+                    elif response_conf == 3:
+                        # Borrar el archivo viejo
+                        try:
+                            os.remove(old_conf_path)
+                            self._show_notification("Archivo .conf anterior eliminado.")
+                        except Exception as e:
+                            self._show_notification(f"Error al eliminar archivo:\n{e}")
+                    elif response_conf == 2:
+                        # Ignorar: se creará un nuevo archivo, notificar
+                        self._show_notification("Se creará un nuevo archivo .conf, el anterior no será modificado.")
+
                 update_apache_config(id_, *data)
                 self._refresh_liststore()
             dialog.destroy()
