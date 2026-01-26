@@ -48,6 +48,9 @@ def get_default_workdir():
 def get_workdir():
     path = get_config("workdir", get_default_workdir())
 
+    # Guardar automáticamente el workdir si no está en la base de datos
+    if get_config("workdir") is None:
+        set_config("workdir", path)
     os.makedirs(path, exist_ok=True)
     return path
 

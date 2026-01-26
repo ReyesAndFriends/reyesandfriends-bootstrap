@@ -2,7 +2,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-from config import get_workdir, set_workdir
+from config import get_workdir, set_workdir, get_default_workdir
 
 class SettingsView(Gtk.Box):
     def __init__(self):
@@ -26,6 +26,10 @@ class SettingsView(Gtk.Box):
         self.folder_btn.connect("clicked", self.on_select_folder)
         btn_box.pack_start(self.folder_btn, False, False, 0)
 
+        self.default_btn = Gtk.Button(label="Restaurar por defecto")
+        self.default_btn.connect("clicked", self.on_restore_default)
+        btn_box.pack_start(self.default_btn, False, False, 0)
+
         self.pack_start(btn_box, False, False, 0)
 
         self.status = Gtk.Label()
@@ -34,7 +38,7 @@ class SettingsView(Gtk.Box):
     def on_save(self, *_):
         path = self.entry.get_text()
         set_workdir(path)
-        self.status.set_text("¡Guardado!")
+        self._show_success("¡Directorio guardado!")
 
     def on_select_folder(self, *_):
         dialog = Gtk.FileChooserDialog(
@@ -45,4 +49,21 @@ class SettingsView(Gtk.Box):
         )
         if dialog.run() == Gtk.ResponseType.OK:
             self.entry.set_text(dialog.get_filename())
+        dialog.destroy()
+
+    def on_restore_default(self, *_):
+        default_path = get_default_workdir()
+        set_workdir(default_path)
+        self.entry.set_text(default_path)
+        self._show_success("¡Directorio restaurado al valor por defecto!")
+
+    def _show_success(self, message):
+        dialog = Gtk.MessageDialog(
+            transient_for=self.get_toplevel(),
+            flags=0,
+            message_type=Gtk.MessageType.INFO,
+            buttons=Gtk.ButtonsType.OK,
+            text=message
+        )
+        dialog.run()
         dialog.destroy()
