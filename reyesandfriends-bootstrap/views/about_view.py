@@ -7,10 +7,10 @@ from gi.repository import GdkPixbuf
 class AboutView(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=20)
-        self.set_margin_top(30)
-        self.set_margin_bottom(30)
-        self.set_margin_start(30)
-        self.set_margin_end(30)
+        self.set_margin_top(32)
+        self.set_margin_bottom(32)
+        self.set_margin_start(32)
+        self.set_margin_end(32)
 
         self._load_css()
 

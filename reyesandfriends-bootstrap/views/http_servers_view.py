@@ -7,9 +7,10 @@ class HttpServersView(Gtk.Box):
     """Vista para gestión de servidores HTTP (widget)"""
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        self.set_border_width(20)
-        self.set_hexpand(True)
-        self.set_vexpand(True)
+        self.set_margin_top(24)
+        self.set_margin_bottom(24)
+        self.set_margin_start(24)
+        self.set_margin_end(24)
         self.server_running = False
         self._create_layout()
         

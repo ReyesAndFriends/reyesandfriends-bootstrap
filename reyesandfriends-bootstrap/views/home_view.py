@@ -8,15 +8,14 @@ class HomeView(Gtk.Box):
 
     def __init__(self, on_navigate=None):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=20)
-        self.set_border_width(40)
-        self.set_hexpand(True)
-        self.set_vexpand(True)
+        self.set_margin_top(32)
+        self.set_margin_bottom(32)
+        self.set_margin_start(32)
+        self.set_margin_end(32)
 
         header_grid = Gtk.Grid()
         header_grid.set_column_spacing(20)
         header_grid.set_row_spacing(0)
-        header_grid.set_hexpand(True)
-        header_grid.set_vexpand(False)
         header_grid.set_name("custom-header")
 
         icon_path = os.path.join(
@@ -80,6 +79,11 @@ class HomeView(Gtk.Box):
         grid = Gtk.Grid()
         grid.set_column_spacing(20)
         grid.set_row_spacing(10)
+        grid.set_margin_top(16)
+        grid.set_margin_bottom(16)
+        grid.set_margin_start(0)
+        grid.set_margin_end(0)
+        grid.set_name("custom-grid")
 
         btn_passwords_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         icon_passwords = Gtk.Image.new_from_icon_name("dialog-password", Gtk.IconSize.DIALOG)
@@ -97,7 +101,6 @@ class HomeView(Gtk.Box):
         btn_passwords_box.pack_start(text_passwords_box, True, True, 0)
         btn_passwords = Gtk.Button()
         btn_passwords.add(btn_passwords_box)
-        btn_passwords.set_hexpand(True)
         btn_passwords.connect("clicked", lambda w: on_navigate and on_navigate("passwords"))
         grid.attach(btn_passwords, 0, 0, 1, 1)
 
@@ -118,7 +121,6 @@ class HomeView(Gtk.Box):
         btn_http_box.pack_start(text_http_box, True, True, 0)
         btn_http = Gtk.Button()
         btn_http.add(btn_http_box)
-        btn_http.set_hexpand(True)
         btn_http.connect("clicked", lambda w: on_navigate and on_navigate("http"))
         grid.attach(btn_http, 1, 0, 1, 1)
 
@@ -139,11 +141,17 @@ class HomeView(Gtk.Box):
         btn_sql_box.pack_start(text_sql_box, True, True, 0)
         btn_sql = Gtk.Button()
         btn_sql.add(btn_sql_box)
-        btn_sql.set_hexpand(True)
         btn_sql.connect("clicked", lambda w: on_navigate and on_navigate("sql"))
         grid.attach(btn_sql, 2, 0, 1, 1)
 
-        self.pack_start(grid, False, False, 0)
+        # Envolver el grid en un contenedor para limitar el ancho máximo
+        grid_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        grid_box.set_halign(Gtk.Align.CENTER)
+        grid_box.set_valign(Gtk.Align.CENTER)
+        grid_box.set_margin_top(0)
+        grid_box.set_margin_bottom(0)
+        grid_box.pack_start(grid, False, False, 0)
+        self.pack_start(grid_box, False, False, 0)
 
         current_year = date.today().year
 
