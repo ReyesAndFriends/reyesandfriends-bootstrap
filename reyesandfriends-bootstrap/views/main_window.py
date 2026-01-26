@@ -8,6 +8,7 @@ from .home_view import HomeView
 from .about_view import AboutView 
 from .servers.apache_view import ApacheView
 from .servers.nginx_view import NginxView
+from .settings_view import SettingsView
 
 
 class MainWindow(Gtk.Window):
@@ -95,6 +96,7 @@ class MainWindow(Gtk.Window):
             ("Gestión de Contraseñas", "passwords"),
             ("Servidores HTTP", "http"),
             ("Scripts SQL", "sql"),
+            ("Configuración", "settings"),
             ("Acerca de", "about"),
         ]
         for idx, (label, view_name) in enumerate(self.sidebar_items):
@@ -143,6 +145,8 @@ class MainWindow(Gtk.Window):
         self.stack.add_titled(self.apache_view, "apache", "Apache")
         self.nginx_view = NginxView()
         self.stack.add_titled(self.nginx_view, "nginx", "Nginx")
+        self.settings_view = SettingsView()
+        self.stack.add_titled(self.settings_view, "settings", "Configuración")
         about = AboutView()
         self.stack.add_titled(about, "about", "Acerca de")
 
@@ -185,6 +189,7 @@ class MainWindow(Gtk.Window):
             "passwords": "dialog-password-symbolic",
             "http": "network-server-symbolic",
             "sql": "accessories-text-editor-symbolic",
+            "settings": "emblem-system-symbolic",
             "about": "help-about-symbolic",
         }
 
