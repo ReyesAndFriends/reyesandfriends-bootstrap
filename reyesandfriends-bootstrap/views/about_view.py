@@ -6,8 +6,8 @@ from gi.repository import GdkPixbuf
 
 class AboutView(Gtk.Box):
     def __init__(self):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=20)
-        self.set_margin_top(32)
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=36)
+        self.set_margin_top(56)
         self.set_margin_bottom(32)
         self.set_margin_start(32)
         self.set_margin_end(32)
@@ -17,17 +17,27 @@ class AboutView(Gtk.Box):
         # ===== Header =====
         header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
         header.get_style_context().add_class("about-header")
+        header.set_margin_top(24) 
 
-        # Usar el logo de la app (settings.png) y escalarlo
         icon_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
-            "assets", "icons", "settings.png"
+            "assets", "icons", "app_icon_multi.png"
         )
+        display_size = 48
+        scale_size = 96
         pixbuf = GdkPixbuf.Pixbuf.new_from_file(icon_path)
-        pixbuf = pixbuf.scale_simple(48, 48, GdkPixbuf.InterpType.BILINEAR)
+        pixbuf = pixbuf.scale_simple(scale_size, scale_size, GdkPixbuf.InterpType.BILINEAR)
         logo = Gtk.Image.new_from_pixbuf(pixbuf)
 
+        # Encapsular el logo en un EventBox con fondo blanco y borde redondeado
+        logo_box = Gtk.EventBox()
+        logo_box.set_size_request(display_size, display_size)
+        logo_box.add(logo)
+        logo_box.get_style_context().add_class("logo-encapsulated")
+        logo_box.set_valign(Gtk.Align.CENTER)
+
         title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        title_box.set_valign(Gtk.Align.CENTER)
 
         title = Gtk.Label()
         title.set_markup("<span size='xx-large' weight='bold'>Reyes&amp;Friends Bootstrap</span>")
@@ -40,7 +50,7 @@ class AboutView(Gtk.Box):
         title_box.pack_start(title, False, False, 0)
         title_box.pack_start(subtitle, False, False, 0)
 
-        header.pack_start(logo, False, False, 0)
+        header.pack_start(logo_box, False, False, 0)
         header.pack_start(title_box, True, True, 0)
 
         self.pack_start(header, False, False, 0)
@@ -48,6 +58,7 @@ class AboutView(Gtk.Box):
         # ===== Card principal =====
         card = Gtk.Frame()
         card.get_style_context().add_class("card")
+        card.set_margin_top(24)
 
         card_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
@@ -201,6 +212,13 @@ class AboutView(Gtk.Box):
             padding: 18px;
             margin-left: 0px;
             margin-right: 0px;
+        }
+        .logo-encapsulated {
+            background: #fff;
+            border-radius: 24px;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 0px;
         }
         """
 

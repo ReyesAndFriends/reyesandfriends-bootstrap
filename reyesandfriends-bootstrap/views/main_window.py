@@ -12,6 +12,8 @@ class MainWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="Inicio - Reyes&Friends Bootstrap")
 
+        self.set_icon_from_file("assets/app_icon.png")
+
         # --- Responsive 16:9 ---
         screen = Gdk.Screen.get_default()
         monitor_w = screen.get_width()

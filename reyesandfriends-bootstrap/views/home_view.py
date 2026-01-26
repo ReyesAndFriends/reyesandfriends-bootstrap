@@ -13,24 +13,27 @@ class HomeView(Gtk.Box):
         self.set_margin_start(32)
         self.set_margin_end(32)
 
-        header_grid = Gtk.Grid()
-        header_grid.set_column_spacing(20)
-        header_grid.set_row_spacing(0)
-        header_grid.set_name("custom-header")
-
+        # Cambiar Grid por Box horizontal para mejor alineación vertical
+        header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        header_box.set_name("custom-header")
+        header_box.set_valign(Gtk.Align.CENTER) 
         icon_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
-            "assets", "icons", "settings.png"
+            "assets", "icons", "app_icon.png"
         )
 
         pixbuf = GdkPixbuf.Pixbuf.new_from_file(icon_path)
-        pixbuf = pixbuf.scale_simple(48, 48, GdkPixbuf.InterpType.BILINEAR)
+        pixbuf = pixbuf.scale_simple(96, 96, GdkPixbuf.InterpType.BILINEAR)
         icon = Gtk.Image.new_from_pixbuf(pixbuf)
-        icon.set_halign(Gtk.Align.START)
+        icon.set_halign(Gtk.Align.CENTER)
         icon.set_valign(Gtk.Align.CENTER)
-        header_grid.attach(icon, 0, 0, 1, 1)
+
+        icon_box = Gtk.EventBox()
+        icon_box.add(icon)
+        icon_box.set_valign(Gtk.Align.CENTER)
 
         text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        text_box.set_valign(Gtk.Align.CENTER)
         label_title = Gtk.Label()
         label_title.set_markup('<span size="xx-large" weight="bold">Reyes&amp;Friends Bootstrap</span>')
         label_title.set_xalign(0)
@@ -40,9 +43,11 @@ class HomeView(Gtk.Box):
         text_box.pack_start(label_title, False, False, 0)
         text_box.pack_start(label_desc, False, False, 0)
         text_box.set_hexpand(True)
-        header_grid.attach(text_box, 1, 0, 1, 1)
 
-        self.pack_start(header_grid, False, False, 0)
+        header_box.pack_start(icon_box, False, False, 0)
+        header_box.pack_start(text_box, True, True, 0)
+
+        self.pack_start(header_box, False, False, 0)
 
         css = b"""
         #custom-header {
