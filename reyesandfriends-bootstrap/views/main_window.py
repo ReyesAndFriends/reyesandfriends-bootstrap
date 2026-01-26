@@ -1,6 +1,6 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 from .passwords_view import PasswordsView
 from .http_servers_view import HttpServersView
 from .sql_scripts_view import SqlScriptsView
@@ -11,7 +11,55 @@ from .about_view import AboutView
 class MainWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="Inicio - Reyes&Friends Bootstrap")
-        self.set_default_size(900, 600)
+
+        display = Gdk.Display.get_default()
+        monitor = None
+        if display is not None:
+            try:
+                monitor = display.get_primary_monitor()
+            except Exception:
+                monitor = None
+            if monitor is None:
+                try:
+                    monitor = display.get_monitor(0)
+                except Exception:
+                    monitor = None
+
+        monitor_w = monitor_h = None
+        if monitor is not None:
+            try:
+                geom = monitor.get_geometry()
+                try:
+                    scale = monitor.get_scale_factor()
+                except Exception:
+                    scale = 1
+                monitor_w = int(geom.width * scale)
+                monitor_h = int(geom.height * scale)
+            except Exception:
+                monitor_w = monitor_h = None
+
+        if monitor_w is None or monitor_h is None:
+            try:
+                screen = Gdk.Screen.get_default()
+            except Exception:
+                screen = None
+            if screen is not None:
+                try:
+                    monitor_w = int(screen.get_width())
+                    monitor_h = int(screen.get_height())
+                except Exception:
+                    monitor_w, monitor_h = 800, 600
+            else:
+                monitor_w, monitor_h = 800, 600
+
+        TARGET_W, TARGET_H = 1024, 768
+        target_w = min(TARGET_W, monitor_w)
+        target_h = min(TARGET_H, monitor_h)
+        self.set_default_size(target_w, target_h)
+
+        req_w = min(600, target_w)
+        req_h = min(400, target_h)
+        self.set_size_request(req_w, req_h)
         self.set_position(Gtk.WindowPosition.CENTER)
 
         self._create_headerbar()
