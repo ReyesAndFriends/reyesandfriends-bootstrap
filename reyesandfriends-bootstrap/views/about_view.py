@@ -55,15 +55,27 @@ class AboutView(Gtk.Box):
             margin=16
         )
 
-        desc = Gtk.Label(
-            label=(
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-                "Esta aplicación fue creada para demostrar cómo hacer "
-                "interfaces GTK bonitas sin morir en el intento."
-            )
+        desc = Gtk.Label()
+        desc.set_markup(
+            "<span size='x-large' weight='bold'>Querido usuario final,</span>\n\n"
+            "<i>"
+            "En el mundo del desarrollo y la administración de sistemas, cada herramienta es una extensión de nuestra creatividad y pasión.\n"
+            "<b>Reyes&amp;Friends Bootstrap</b> surge como un puente entre la idea y la acción, entre el deseo de automatizar y la necesidad de simplificar.\n"
+            "No es solo un gestor de utilidades, sino el reflejo de incontables horas enfrentando desafíos, aprendiendo de errores y celebrando pequeños triunfos.\n\n"
+            "Este proyecto es un homenaje a quienes creen que la tecnología puede ser cercana, útil y elegante.\n"
+            "A quienes disfrutan compartir conocimiento y construir soluciones que faciliten la vida de otros.\n"
+            "<span foreground='#1565c0'><b>Gracias por ser parte de esta comunidad</b></span>, por inspirar y por confiar en que juntos podemos hacer del mundo digital un lugar más amigable y eficiente."
+            "</i>"
         )
+        desc.set_xalign(0.5)
+        desc.set_halign(Gtk.Align.CENTER)
         desc.set_line_wrap(True)
-        desc.set_justify(Gtk.Justification.LEFT)
+        desc.set_justify(Gtk.Justification.CENTER)
+        desc.set_margin_top(12)
+        desc.set_margin_bottom(12)
+        desc.set_margin_start(24)
+        desc.set_margin_end(24)
+        desc.get_style_context().add_class("credit-card")
 
         card_box.pack_start(desc, False, False, 0)
         card_box.pack_start(Gtk.Separator(), False, False, 8)
@@ -75,7 +87,8 @@ class AboutView(Gtk.Box):
             uri="https://www.reyesandfriends.cl",
             label="www.reyesandfriends.cl"
         )
-        web.set_halign(Gtk.Align.START)
+        web.set_halign(Gtk.Align.CENTER)
+        web.get_style_context().add_class("about-link")
         card_box.pack_start(web, False, False, 0)
 
         card.add(card_box)
@@ -162,6 +175,18 @@ class AboutView(Gtk.Box):
             border: 1px solid #ddd;
         }
 
+        .card * {
+            color: #000;
+        }
+
+        .about-link {
+            color: #1565c0;
+            font-weight: bold;
+        }
+        .about-link:hover {
+            text-decoration: underline;
+        }
+
         .key {
             font-weight: bold;
         }
@@ -169,6 +194,13 @@ class AboutView(Gtk.Box):
         .footer {
             color: #999;
             margin-top: 20px;
+        }
+
+        .credit-card {
+            border-radius: 10px;
+            padding: 18px;
+            margin-left: 0px;
+            margin-right: 0px;
         }
         """
 
