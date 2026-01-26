@@ -6,11 +6,12 @@ from .passwords_view import PasswordsView
 from .http_servers_view import HttpServersView
 from .sql_scripts_view import SqlScriptsView
 from .home_view import HomeView
+from .about_view import AboutView 
 
 
 class MainWindow(Gtk.Window):
     def __init__(self):
-        super().__init__(title="Menu Principal")
+        super().__init__(title="Inicio - Reyes&Friends Bootstrap")
         self.set_default_size(900, 600)
         self.set_position(Gtk.WindowPosition.CENTER)
 
@@ -23,7 +24,7 @@ class MainWindow(Gtk.Window):
     def _create_headerbar(self):
         header = Gtk.HeaderBar()
         header.set_show_close_button(True)
-        header.set_title("Menu Principal")
+        header.set_title("Reyes&Friends Bootstrap")
         header.get_style_context().add_class("header")
         self.set_titlebar(header)
 
@@ -74,24 +75,8 @@ class MainWindow(Gtk.Window):
         self.stack.add_titled(self.http_servers_view, "http", "HTTP Servers")
         self.stack.add_titled(self.sql_scripts_view, "sql", "SQL Scripts")
 
-        about = self._create_about_view()
+        about = AboutView()  # <-- Usa la nueva vista
         self.stack.add_titled(about, "about", "Acerca de")
-
-    def _create_about_view(self):
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        box.set_margin_top(40)
-
-        label = Gtk.Label()
-        label.set_markup(
-            "<big><b>Menu Principal GTK</b></big>\n\n"
-            "Versión 1.0.0\n"
-            "Autor: Reyes&amp;Friends\n\n"
-            "<a href='https://www.gtk.org'>https://www.gtk.org</a>"
-        )
-        label.set_justify(Gtk.Justification.CENTER)
-
-        box.pack_start(label, True, True, 0)
-        return box
 
     # ---------------- HELPERS ----------------
 

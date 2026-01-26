@@ -4,11 +4,15 @@ gi.require_version('Gdk', '3.0')
 from gi.repository import Gtk, Gdk
 
 from views import MainWindow
-
+import os
 
 def main():
-    """Inicializar y ejecutar la aplicación"""
+
     window = MainWindow()
+
+    icon_path = os.path.join(os.path.dirname(__file__), "assets", "app_icon.png")
+    if os.path.exists(icon_path):
+        window.set_icon_from_file(icon_path)
 
     display = Gdk.Display.get_default()
     monitor = display.get_primary_monitor()
