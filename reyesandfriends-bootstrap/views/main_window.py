@@ -36,7 +36,6 @@ class MainWindow(Gtk.Window):
         geometry.min_width = min_w
         geometry.min_height = min_h
         geometry.max_width = target_w
-        geometry.max_height = target_h
         self.set_geometry_hints(self, geometry,
             Gdk.WindowHints.MIN_SIZE | Gdk.WindowHints.MAX_SIZE)
 
