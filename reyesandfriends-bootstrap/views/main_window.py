@@ -21,25 +21,19 @@ class MainWindow(Gtk.Window):
         monitor_w = screen.get_width()
         monitor_h = screen.get_height()
 
-        max_width_by_height = int(monitor_h * 16 / 9)
-        max_height_by_width = int(monitor_w * 9 / 16)
-
-        if max_width_by_height <= monitor_w:
-            target_w = max_width_by_height
-            target_h = monitor_h
-        else:
-            target_w = monitor_w
-            target_h = max_height_by_width
+        max_width = monitor_w
+        max_height = monitor_h
 
         min_w, min_h = 640, 360
 
-        self.set_default_size(target_w, target_h)
+        self.set_default_size(max_width, max_height)
         self.set_resizable(True)
 
         geometry = Gdk.Geometry()
         geometry.min_width = min_w
         geometry.min_height = min_h
-        geometry.max_width = target_w
+        geometry.max_width = max_width
+        geometry.max_height = max_height
         self.set_geometry_hints(self, geometry,
             Gdk.WindowHints.MIN_SIZE | Gdk.WindowHints.MAX_SIZE)
 
@@ -121,9 +115,14 @@ class MainWindow(Gtk.Window):
         # -------- Stack Views --------
         self._create_views()
 
+        scrolled_stack = Gtk.ScrolledWindow()
+        scrolled_stack.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scrolled_stack.set_shadow_type(Gtk.ShadowType.NONE)
+        scrolled_stack.add(self.stack)
+
         root.pack_start(sidebar_container, False, False, 0)
         root.pack_start(separator, False, False, 0)
-        root.pack_start(self.stack, True, True, 0)
+        root.pack_start(scrolled_stack, True, True, 0)
 
         self.stack.set_visible_child_name("home")
         self.sidebar_list.select_row(self.sidebar_list.get_row_at_index(0))
