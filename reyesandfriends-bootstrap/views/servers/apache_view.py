@@ -59,7 +59,12 @@ class ApacheView(Gtk.Box):
         col2.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][2] else "No"))
         col3 = Gtk.TreeViewColumn("HTTPS", renderer_bool)
         col3.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][3] else "No"))
-        col4 = Gtk.TreeViewColumn("Path/Proxy", renderer_text, text=4)
+        col4 = Gtk.TreeViewColumn("Path", renderer_text)
+        col4.set_cell_data_func(renderer_text, lambda col, cell, model, iter, data:
+            cell.set_property("text", model[iter][4] if not model[iter][8] else "No aplica"))
+        col_proxy = Gtk.TreeViewColumn("Proxy", renderer_text)
+        col_proxy.set_cell_data_func(renderer_text, lambda col, cell, model, iter, data:
+            cell.set_property("text", model[iter][9] if model[iter][8] else "No aplica"))
         col5 = Gtk.TreeViewColumn("SSL", renderer_text, text=5)
         col6 = Gtk.TreeViewColumn("Redirect", renderer_bool)
         col6.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][7] else "No"))
@@ -68,6 +73,7 @@ class ApacheView(Gtk.Box):
         self.treeview.append_column(col2)
         self.treeview.append_column(col3)
         self.treeview.append_column(col4)
+        self.treeview.append_column(col_proxy)
         self.treeview.append_column(col5)
         self.treeview.append_column(col6)
         select = self.treeview.get_selection()
