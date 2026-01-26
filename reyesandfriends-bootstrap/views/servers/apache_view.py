@@ -166,6 +166,8 @@ class ApacheView(Gtk.Box):
             if response == Gtk.ResponseType.YES:
                 delete_apache_config(id_)
                 self._refresh_liststore()
+                # Mensaje de confirmación
+                self._show_notification("Configuración eliminada correctamente.")
 
     def _on_generar_clicked(self, *_):
         selection = self.treeview.get_selection()
