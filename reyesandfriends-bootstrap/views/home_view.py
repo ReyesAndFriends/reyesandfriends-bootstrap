@@ -86,26 +86,6 @@ class HomeView(Gtk.Box):
         btns_box.set_margin_top(16)
         btns_box.set_margin_bottom(16)
 
-        # Contraseñas
-        btn_passwords_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        icon_passwords = Gtk.Image.new_from_icon_name("dialog-password", Gtk.IconSize.DIALOG)
-        text_passwords_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        label_passwords_title = Gtk.Label()
-        label_passwords_title.set_markup("<b>Gestión de Contraseñas</b>")
-        label_passwords_title.set_xalign(0)
-        label_passwords_desc = Gtk.Label(label="Guarda y consulta tus contraseñas de forma segura.")
-        label_passwords_desc.set_xalign(0)
-        label_passwords_desc.set_justify(Gtk.Justification.LEFT)
-        label_passwords_desc.set_margin_top(2)
-        text_passwords_box.pack_start(label_passwords_title, False, False, 0)
-        text_passwords_box.pack_start(label_passwords_desc, False, False, 0)
-        btn_passwords_box.pack_start(icon_passwords, False, False, 0)
-        btn_passwords_box.pack_start(text_passwords_box, True, True, 0)
-        btn_passwords = Gtk.Button()
-        btn_passwords.add(btn_passwords_box)
-        btn_passwords.connect("clicked", lambda w: on_navigate and on_navigate("passwords"))
-        btns_box.pack_start(btn_passwords, False, False, 0)
-
         # Servidores HTTP
         btn_http_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         icon_http = Gtk.Image.new_from_icon_name("network-server", Gtk.IconSize.DIALOG)

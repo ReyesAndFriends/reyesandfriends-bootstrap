@@ -1,7 +1,6 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
-from .passwords_view import PasswordsView
 from .http_servers_view import HttpServersView
 from .sql_scripts_view import SqlScriptsView
 from .home_view import HomeView
@@ -93,7 +92,6 @@ class MainWindow(Gtk.Window):
 
         self.sidebar_items = [
             ("Inicio", "home"),
-            ("Gestión de Contraseñas", "passwords"),
             ("Servidores HTTP", "http"),
             ("Scripts SQL", "sql"),
             ("Configuración", "settings"),
@@ -134,11 +132,9 @@ class MainWindow(Gtk.Window):
 
     def _create_views(self):
         self.home_view = HomeView(on_navigate=self._navigate_to)
-        self.passwords_view = PasswordsView()
         self.http_servers_view = HttpServersView(on_navigate=self._navigate_to)
         self.sql_scripts_view = SqlScriptsView()
         self.stack.add_titled(self.home_view, "home", "Inicio")
-        self.stack.add_titled(self.passwords_view, "passwords", "Gestión de Contraseñas")
         self.stack.add_titled(self.http_servers_view, "http", "Servidores HTTP")
         self.stack.add_titled(self.sql_scripts_view, "sql", "Scripts SQL")
         self.apache_view = ApacheView()
