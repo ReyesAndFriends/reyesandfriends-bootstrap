@@ -153,6 +153,7 @@ class ApacheView(Gtk.Box):
         model, treeiter = selection.get_selected()
         if treeiter:
             id_ = model[treeiter][0]
+            config = get_apache_config(id_)
             # Confirmación antes de eliminar
             dialog = Gtk.MessageDialog(
                 transient_for=self.get_toplevel(),
@@ -164,9 +165,32 @@ class ApacheView(Gtk.Box):
             response = dialog.run()
             dialog.destroy()
             if response == Gtk.ResponseType.YES:
+                # Buscar archivo .conf asociado
+                server_names = config[1]
+                main_name = [n.strip() for n in server_names.split(",") if n.strip()][0] if server_names else None
+                conf_filename = f"{main_name}.conf" if main_name else None
+                workdir = get_workdir()
+                apache_dir = os.path.join(workdir, "http-configs", "apache")
+                conf_path = os.path.join(apache_dir, conf_filename) if conf_filename else None
+                file_exists = conf_path and os.path.isfile(conf_path)
+                # Si existe el archivo, preguntar si también eliminarlo
+                if file_exists:
+                    dialog2 = Gtk.MessageDialog(
+                        transient_for=self.get_toplevel(),
+                        flags=0,
+                        message_type=Gtk.MessageType.QUESTION,
+                        buttons=Gtk.ButtonsType.YES_NO,
+                        text=f"También se encontró el archivo:\n{conf_path}\n¿Desea eliminarlo?"
+                    )
+                    response2 = dialog2.run()
+                    dialog2.destroy()
+                    if response2 == Gtk.ResponseType.YES:
+                        try:
+                            os.remove(conf_path)
+                        except Exception as e:
+                            self._show_notification(f"Error al eliminar archivo:\n{e}")
                 delete_apache_config(id_)
                 self._refresh_liststore()
-                # Mensaje de confirmación
                 self._show_notification("Configuración eliminada correctamente.")
 
     def _on_generar_clicked(self, *_):
