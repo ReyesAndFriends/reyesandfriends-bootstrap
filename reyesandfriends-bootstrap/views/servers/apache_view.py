@@ -193,6 +193,10 @@ class ApacheView(Gtk.Box):
         dialog.destroy()
 
     def _generate_apache_conf(self, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http):
+        def indent(text, spaces=4):
+            pad = " " * spaces
+            return "\n".join(pad + line if line.strip() else "" for line in text.splitlines())
+
         names = " ".join([n.strip() for n in server_names.split(",") if n.strip()])
         blocks = []
         certfile = ""
@@ -212,35 +216,45 @@ class ApacheView(Gtk.Box):
     Require all granted
 </Directory>"""
 
+        # Formatear el bloque <Directory> con sangría
+        formatted_directory_block = indent(directory_block, 4)
+
         if http_enabled:
             if https_enabled and redirect_http:
-                blocks.append(f"""<VirtualHost *:80>
-    ServerName {names.split()[0]}
-    ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}
-    Redirect permanent / https://{names.split()[0]}/
-</VirtualHost>""")
+                blocks.append(
+                    "<VirtualHost *:80>\n"
+                    f"{indent(f'ServerName {names.split()[0]}')}\n"
+                    f"{indent(f'ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}')}\n"
+                    f"{indent(f'Redirect permanent / https://{names.split()[0]}/')}\n"
+                    f"{formatted_directory_block}\n"
+                    "</VirtualHost>\n"
+                )
             else:
-                blocks.append(f"""<VirtualHost *:80>
-    ServerName {names.split()[0]}
-    ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}
-    DocumentRoot {docroot}
-    ErrorLog ${{APACHE_LOG_DIR}}/error.log
-    CustomLog ${{APACHE_LOG_DIR}}/access.log combined
-{directory_block}
-</VirtualHost>""")
+                blocks.append(
+                    "<VirtualHost *:80>\n"
+                    f"{indent(f'ServerName {names.split()[0]}')}\n"
+                    f"{indent(f'ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}')}\n"
+                    f"{indent(f'DocumentRoot {docroot}')}\n"
+                    f"{indent('ErrorLog ${APACHE_LOG_DIR}/error.log')}\n"
+                    f"{indent('CustomLog ${APACHE_LOG_DIR}/access.log combined')}\n"
+                    f"{formatted_directory_block}\n"
+                    "</VirtualHost>\n"
+                )
         if https_enabled:
-            blocks.append(f"""<VirtualHost *:443>
-    ServerName {names.split()[0]}
-    ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}
-    DocumentRoot {docroot}
-    SSLEngine on
-    SSLCertificateFile {certfile}
-    SSLCertificateKeyFile {keyfile}
-    ErrorLog ${{APACHE_LOG_DIR}}/error.log
-    CustomLog ${{APACHE_LOG_DIR}}/access.log combined
-{directory_block}
-</VirtualHost>""")
-        return "\n\n".join(blocks)
+            blocks.append(
+                "<VirtualHost *:443>\n"
+                f"{indent(f'ServerName {names.split()[0]}')}\n"
+                f"{indent(f'ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}')}\n"
+                f"{indent(f'DocumentRoot {docroot}')}\n"
+                f"{indent('SSLEngine on')}\n"
+                f"{indent(f'SSLCertificateFile {certfile}')}\n"
+                f"{indent(f'SSLCertificateKeyFile {keyfile}')}\n"
+                f"{indent('ErrorLog ${APACHE_LOG_DIR}/error.log')}\n"
+                f"{indent('CustomLog ${APACHE_LOG_DIR}/access.log combined')}\n"
+                f"{formatted_directory_block}\n"
+                "</VirtualHost>\n"
+            )
+        return "\n".join(blocks)
 
 class ApacheConfigDialog(Gtk.Dialog):
     def __init__(self, parent, title, config=None):
