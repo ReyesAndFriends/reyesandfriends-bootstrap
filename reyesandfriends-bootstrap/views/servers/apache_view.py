@@ -148,8 +148,19 @@ class ApacheView(Gtk.Box):
         model, treeiter = selection.get_selected()
         if treeiter:
             id_ = model[treeiter][0]
-            delete_apache_config(id_)
-            self._refresh_liststore()
+            # Confirmación antes de eliminar
+            dialog = Gtk.MessageDialog(
+                transient_for=self.get_toplevel(),
+                flags=0,
+                message_type=Gtk.MessageType.QUESTION,
+                buttons=Gtk.ButtonsType.YES_NO,
+                text="¿Está seguro que desea eliminar esta configuración?"
+            )
+            response = dialog.run()
+            dialog.destroy()
+            if response == Gtk.ResponseType.YES:
+                delete_apache_config(id_)
+                self._refresh_liststore()
 
     def _on_generar_clicked(self, *_):
         selection = self.treeview.get_selection()
