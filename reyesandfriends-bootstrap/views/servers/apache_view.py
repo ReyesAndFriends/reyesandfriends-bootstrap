@@ -49,13 +49,20 @@ class ApacheView(Gtk.Box):
         self.liststore = Gtk.ListStore(int, str, int, int, str, str, str, int)  # id, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http
         self._refresh_liststore()
         self.treeview = Gtk.TreeView(model=self.liststore)
+
         renderer_text = Gtk.CellRendererText()
+        renderer_bool = Gtk.CellRendererText()
+
         col1 = Gtk.TreeViewColumn("Dominios", renderer_text, text=1)
-        col2 = Gtk.TreeViewColumn("HTTP", renderer_text, text=2)
-        col3 = Gtk.TreeViewColumn("HTTPS", renderer_text, text=3)
+        col2 = Gtk.TreeViewColumn("HTTP", renderer_bool)
+        col2.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][2] else "No"))
+        col3 = Gtk.TreeViewColumn("HTTPS", renderer_bool)
+        col3.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][3] else "No"))
         col4 = Gtk.TreeViewColumn("Path", renderer_text, text=4)
         col5 = Gtk.TreeViewColumn("SSL", renderer_text, text=5)
-        col6 = Gtk.TreeViewColumn("Redirect", renderer_text, text=7)
+        col6 = Gtk.TreeViewColumn("Redirect", renderer_bool)
+        col6.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][7] else "No"))
+
         self.treeview.append_column(col1)
         self.treeview.append_column(col2)
         self.treeview.append_column(col3)
@@ -262,7 +269,6 @@ class ApacheConfigDialog(Gtk.Dialog):
         grid.attach(lbl_docroot, 0, 3, 1, 1)
         grid.attach(self.entry_docroot, 1, 3, 2, 1)
 
-        # SSL preset
         lbl_ssl = Gtk.Label(label="Certificado SSL:")
         lbl_ssl.set_halign(Gtk.Align.END)
         self.combo_ssl = Gtk.ComboBoxText()
@@ -272,7 +278,6 @@ class ApacheConfigDialog(Gtk.Dialog):
         grid.attach(lbl_ssl, 0, 4, 1, 1)
         grid.attach(self.combo_ssl, 1, 4, 2, 1)
 
-        # SSL custom entry
         lbl_ssl_custom = Gtk.Label(label="Ruta cert y key (custom):")
         lbl_ssl_custom.set_halign(Gtk.Align.END)
         self.entry_ssl_custom = Gtk.Entry()
@@ -280,7 +285,6 @@ class ApacheConfigDialog(Gtk.Dialog):
         grid.attach(lbl_ssl_custom, 0, 5, 1, 1)
         grid.attach(self.entry_ssl_custom, 1, 5, 2, 1)
 
-        # Redirect HTTP->HTTPS
         self.check_redirect = Gtk.CheckButton(label="Redirigir HTTP a HTTPS")
         grid.attach(self.check_redirect, 1, 6, 2, 1)
 
@@ -291,11 +295,15 @@ class ApacheConfigDialog(Gtk.Dialog):
             if not btn.get_active():
                 self.combo_ssl.set_active(-1)
                 self.check_redirect.set_active(False)
+            # Ocultar campo custom si no hay https
+            self.entry_ssl_custom.set_sensitive(False)
+            lbl_ssl_custom.set_sensitive(False)
         self.check_https.connect("toggled", on_https_toggled)
 
         def on_ssl_combo_changed(combo):
             is_custom = combo.get_active_id() == "custom"
             self.entry_ssl_custom.set_sensitive(is_custom)
+            lbl_ssl_custom.set_sensitive(is_custom)
         self.combo_ssl.connect("changed", on_ssl_combo_changed)
 
         # Inicialización de valores
@@ -318,7 +326,9 @@ class ApacheConfigDialog(Gtk.Dialog):
         # Estado inicial de widgets
         self.combo_ssl.set_sensitive(self.check_https.get_active())
         self.check_redirect.set_sensitive(self.check_https.get_active())
-        self.entry_ssl_custom.set_sensitive(self.combo_ssl.get_active_id() == "custom")
+        is_custom = self.combo_ssl.get_active_id() == "custom" and self.check_https.get_active()
+        self.entry_ssl_custom.set_sensitive(is_custom)
+        lbl_ssl_custom.set_sensitive(is_custom)
 
         self.show_all()
 
