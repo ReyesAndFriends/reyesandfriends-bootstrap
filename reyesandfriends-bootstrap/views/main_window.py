@@ -45,6 +45,9 @@ class MainWindow(Gtk.Window):
 
         self.set_position(Gtk.WindowPosition.CENTER)
 
+        self._view_history = []
+        self._current_view = "home"
+
         self._create_headerbar()
         self._create_layout()
 
@@ -54,6 +57,14 @@ class MainWindow(Gtk.Window):
         header = Gtk.HeaderBar()
         header.set_show_close_button(True)
         header.set_title("Reyes&Friends Bootstrap")
+        # Botón Atrás
+        self.back_button = Gtk.Button()
+        icon = Gtk.Image.new_from_icon_name("go-previous-symbolic", Gtk.IconSize.BUTTON)
+        self.back_button.add(icon)
+        self.back_button.set_tooltip_text("Volver atrás")
+        self.back_button.connect("clicked", self._on_back_clicked)
+        self.back_button.set_sensitive(False)
+        header.pack_start(self.back_button)
         self.set_titlebar(header)
 
     # ---------------- LAYOUT ----------------
@@ -138,18 +149,34 @@ class MainWindow(Gtk.Window):
     # ---------------- HELPERS ----------------
 
     def _navigate_to(self, view_name):
+        if view_name != self._current_view:
+            self._view_history.append(self._current_view)
+            self.back_button.set_sensitive(True)
         self.stack.set_visible_child_name(view_name)
+        self._current_view = view_name
         for idx, (_, name) in enumerate(self.sidebar_items):
             if name == view_name:
                 self.sidebar_list.select_row(self.sidebar_list.get_row_at_index(idx))
                 break
+
+    def _on_back_clicked(self, *_):
+        if self._view_history:
+            prev_view = self._view_history.pop()
+            self.stack.set_visible_child_name(prev_view)
+            self._current_view = prev_view
+            for idx, (_, name) in enumerate(self.sidebar_items):
+                if name == prev_view:
+                    self.sidebar_list.select_row(self.sidebar_list.get_row_at_index(idx))
+                    break
+        if not self._view_history:
+            self.back_button.set_sensitive(False)
 
     def on_exit_clicked(self, *_):
         Gtk.main_quit()
 
     def _on_sidebar_row_selected(self, listbox, row):
         if row:
-            self.stack.set_visible_child_name(row.view_name)
+            self._navigate_to(row.view_name)
 
     def _get_icon_name(self, view_name):
 
