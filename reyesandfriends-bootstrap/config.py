@@ -43,7 +43,7 @@ def get_config(key, default=None):
     return default
 
 def get_default_workdir():
-    return os.path.expanduser(f"~/.{APP_NAME}")
+    return os.path.expanduser(f"~/{APP_NAME}")
 
 def get_workdir():
     path = get_config("workdir", get_default_workdir())

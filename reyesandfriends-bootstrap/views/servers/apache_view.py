@@ -179,14 +179,19 @@ class ApacheView(Gtk.Box):
                     config[1], config[2], config[3], config[4], config[5], config[6], config[7], config[8], config[9]
                 )
                 conf_text = self._generate_apache_conf(server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target)
-                preview_dialog = ApacheConfPreviewDialog(self.get_toplevel(), conf_text)
+                # Obtener el dominio principal para sugerir el nombre de archivo
+                main_name = [n.strip() for n in server_names.split(",") if n.strip()][0] if server_names else "apache-website"
+                suggested_filename = f"{main_name}.conf"
+                preview_dialog = ApacheConfPreviewDialog(self.get_toplevel(), conf_text, suggested_filename)
                 response = preview_dialog.run()
                 if response == Gtk.ResponseType.OK:
                     save_option = preview_dialog.get_save_option()
                     filename = preview_dialog.get_filename()
                     if save_option == "workdir":
                         workdir = get_workdir()
-                        filepath = os.path.join(workdir, filename)
+                        apache_dir = os.path.join(workdir, "http-configs", "apache")
+                        os.makedirs(apache_dir, exist_ok=True)
+                        filepath = os.path.join(apache_dir, filename)
                     else:
                         filepath = preview_dialog.get_custom_path()
                         if not filepath:
@@ -428,7 +433,7 @@ class ApacheConfigDialog(Gtk.Dialog):
         return names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target
 
 class ApacheConfPreviewDialog(Gtk.Dialog):
-    def __init__(self, parent, conf_text):
+    def __init__(self, parent, conf_text, suggested_filename="apache-website.conf"):
         super().__init__("Preview y Guardar .conf", parent, 0,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_SAVE, Gtk.ResponseType.OK)
@@ -453,11 +458,11 @@ class ApacheConfPreviewDialog(Gtk.Dialog):
 
         self.save_option = "workdir"
         self.filename_entry = Gtk.Entry()
-        self.filename_entry.set_text("vhost.conf")
+        self.filename_entry.set_text(suggested_filename)
         self.custom_path = None
 
         radio_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        self.radio_workdir = Gtk.RadioButton.new_with_label_from_widget(None, f"Guardar en directorio de trabajo ({get_workdir()})")
+        self.radio_workdir = Gtk.RadioButton.new_with_label_from_widget(None, f"Guardar en http-configs/apache/ dentro del directorio de trabajo ({get_workdir()})")
         self.radio_custom = Gtk.RadioButton.new_with_label_from_widget(self.radio_workdir, "Elegir otro lugar...")
         self.radio_workdir.set_active(True)
         self.radio_workdir.connect("toggled", self._on_radio_toggled)
@@ -506,7 +511,7 @@ class ApacheConfPreviewDialog(Gtk.Dialog):
         return self.save_option
 
     def get_filename(self):
-        return self.filename_entry.get_text().strip() or "vhost.conf"
+        return self.filename_entry.get_text().strip() or "apache-website.conf"
 
     def get_custom_path(self):
         if self.custom_path:
