@@ -206,6 +206,12 @@ class ApacheView(Gtk.Box):
         elif ssl_preset == "custom":
             certfile, keyfile = (ssl_cert or "").split("::") if "::" in (ssl_cert or "") else ("", "")
 
+        directory_block = f"""<Directory {docroot}>
+    Options FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>"""
+
         if http_enabled:
             if https_enabled and redirect_http:
                 blocks.append(f"""<VirtualHost *:80>
@@ -220,6 +226,7 @@ class ApacheView(Gtk.Box):
     DocumentRoot {docroot}
     ErrorLog ${{APACHE_LOG_DIR}}/error.log
     CustomLog ${{APACHE_LOG_DIR}}/access.log combined
+{directory_block}
 </VirtualHost>""")
         if https_enabled:
             blocks.append(f"""<VirtualHost *:443>
@@ -231,6 +238,7 @@ class ApacheView(Gtk.Box):
     SSLCertificateKeyFile {keyfile}
     ErrorLog ${{APACHE_LOG_DIR}}/error.log
     CustomLog ${{APACHE_LOG_DIR}}/access.log combined
+{directory_block}
 </VirtualHost>""")
         return "\n\n".join(blocks)
 
