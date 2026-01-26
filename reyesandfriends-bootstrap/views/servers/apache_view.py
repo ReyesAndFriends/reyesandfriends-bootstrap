@@ -223,6 +223,20 @@ class ApacheView(Gtk.Box):
                         if not filepath:
                             preview_dialog.destroy()
                             return
+                    # Verificar si el archivo ya existe y pedir confirmación para sobreescribir
+                    if os.path.isfile(filepath):
+                        dialog_overwrite = Gtk.MessageDialog(
+                            transient_for=self.get_toplevel(),
+                            flags=0,
+                            message_type=Gtk.MessageType.QUESTION,
+                            buttons=Gtk.ButtonsType.YES_NO,
+                            text=f"El archivo ya existe:\n{filepath}\n¿Desea sobreescribirlo?"
+                        )
+                        resp_overwrite = dialog_overwrite.run()
+                        dialog_overwrite.destroy()
+                        if resp_overwrite != Gtk.ResponseType.YES:
+                            preview_dialog.destroy()
+                            return
                     try:
                         with open(filepath, "w") as f:
                             f.write(conf_text)
