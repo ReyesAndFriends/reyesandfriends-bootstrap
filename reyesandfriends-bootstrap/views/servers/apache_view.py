@@ -46,7 +46,8 @@ class ApacheView(Gtk.Box):
         list_frame = Gtk.Frame()
         list_frame.set_shadow_type(Gtk.ShadowType.IN)
         list_frame.set_size_request(-1, 180)
-        self.liststore = Gtk.ListStore(int, str, int, int, str, str, str, int)  # id, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http
+        self.liststore = Gtk.ListStore(int, str, int, int, str, str, str, int, int, str)  
+        # id, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target
         self._refresh_liststore()
         self.treeview = Gtk.TreeView(model=self.liststore)
 
@@ -58,7 +59,7 @@ class ApacheView(Gtk.Box):
         col2.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][2] else "No"))
         col3 = Gtk.TreeViewColumn("HTTPS", renderer_bool)
         col3.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][3] else "No"))
-        col4 = Gtk.TreeViewColumn("Path", renderer_text, text=4)
+        col4 = Gtk.TreeViewColumn("Path/Proxy", renderer_text, text=4)
         col5 = Gtk.TreeViewColumn("SSL", renderer_text, text=5)
         col6 = Gtk.TreeViewColumn("Redirect", renderer_bool)
         col6.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][7] else "No"))
@@ -101,16 +102,14 @@ class ApacheView(Gtk.Box):
     def _refresh_liststore(self):
         self.liststore.clear()
         for row in list_apache_configs():
-            # row: (id, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http)
+            # row: (id, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target)
             row = list(row)
             # Compatibilidad hacia atrás
-            while len(row) < 8:
-                if len(row) == 5:
-                    row.append("certbot")  # ssl_preset
-                elif len(row) == 6:
-                    row.append("")         # ssl_cert
-                elif len(row) == 7:
-                    row.append(0)          # redirect_http
+            while len(row) < 10:
+                if len(row) == 8:
+                    row.append(0)      # is_proxy
+                elif len(row) == 9:
+                    row.append("")     # proxy_target
             self.liststore.append(row)
 
     def _on_selection_changed(self, selection):
@@ -169,8 +168,11 @@ class ApacheView(Gtk.Box):
             id_ = model[treeiter][0]
             config = get_apache_config(id_)
             if config:
-                server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http = config[1], config[2], config[3], config[4], config[5], config[6], config[7]
-                conf_text = self._generate_apache_conf(server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http)
+                # Desempaquetar nuevos campos
+                (server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target) = (
+                    config[1], config[2], config[3], config[4], config[5], config[6], config[7], config[8], config[9]
+                )
+                conf_text = self._generate_apache_conf(server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target)
                 preview_dialog = ApacheConfPreviewDialog(self.get_toplevel(), conf_text)
                 response = preview_dialog.run()
                 if response == Gtk.ResponseType.OK:
@@ -203,66 +205,77 @@ class ApacheView(Gtk.Box):
         dialog.run()
         dialog.destroy()
 
-    def _generate_apache_conf(self, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http):
+    def _generate_apache_conf(self, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target):
         def indent(text, spaces=4):
             pad = " " * spaces
             return "\n".join(pad + line if line.strip() else "" for line in text.splitlines())
 
-        names = " ".join([n.strip() for n in server_names.split(",") if n.strip()])
+        names = [n.strip() for n in server_names.split(",") if n.strip()]
+        main_name = names[0] if names else ""
+        aliases = names[1:] if len(names) > 1 else []
         blocks = []
         certfile = ""
         keyfile = ""
         if ssl_preset == "certbot":
-            certfile = f"/etc/letsencrypt/live/{names.split()[0]}/fullchain.pem"
-            keyfile = f"/etc/letsencrypt/live/{names.split()[0]}/privkey.pem"
+            certfile = f"/etc/letsencrypt/live/{main_name}/fullchain.pem"
+            keyfile = f"/etc/letsencrypt/live/{main_name}/privkey.pem"
         elif ssl_preset == "snakeoil":
             certfile = "/etc/ssl/certs/ssl-cert-snakeoil.pem"
             keyfile = "/etc/ssl/private/ssl-cert-snakeoil.key"
         elif ssl_preset == "custom":
             certfile, keyfile = (ssl_cert or "").split("::") if "::" in (ssl_cert or "") else ("", "")
 
-        directory_block = f"""<Directory {docroot}>
+        if is_proxy:
+            proxy_block = f"""
+ProxyPreserveHost On
+ProxyPass / http://{proxy_target}/
+ProxyPassReverse / http://{proxy_target}/
+"""
+            formatted_proxy_block = indent(proxy_block, 4)
+        else:
+            directory_block = f"""<Directory {docroot}>
     Options FollowSymLinks
     AllowOverride All
     Require all granted
 </Directory>"""
+            formatted_directory_block = indent(directory_block, 4)
 
-        # Formatear el bloque <Directory> con sangría
-        formatted_directory_block = indent(directory_block, 4)
+        def server_alias_line():
+            return indent(f"ServerAlias {' '.join(aliases)}") if aliases else ""
 
         if http_enabled:
             if https_enabled and redirect_http:
+                # Solo redirección, sin proxy ni directory
                 blocks.append(
                     "<VirtualHost *:80>\n"
-                    f"{indent(f'ServerName {names.split()[0]}')}\n"
-                    f"{indent(f'ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}')}\n"
-                    f"{indent(f'Redirect permanent / https://{names.split()[0]}/')}\n"
-                    f"{formatted_directory_block}\n"
+                    f"{indent(f'ServerName {main_name}')}\n"
+                    f"{server_alias_line()}\n"
+                    f"{indent(f'Redirect permanent / https://{main_name}/')}\n"
                     "</VirtualHost>\n"
                 )
             else:
                 blocks.append(
                     "<VirtualHost *:80>\n"
-                    f"{indent(f'ServerName {names.split()[0]}')}\n"
-                    f"{indent(f'ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}')}\n"
-                    f"{indent(f'DocumentRoot {docroot}')}\n"
+                    f"{indent(f'ServerName {main_name}')}\n"
+                    f"{server_alias_line()}\n"
+                    f"{indent(f'DocumentRoot {docroot}') if not is_proxy else ''}\n"
                     f"{indent('ErrorLog ${APACHE_LOG_DIR}/error.log')}\n"
                     f"{indent('CustomLog ${APACHE_LOG_DIR}/access.log combined')}\n"
-                    f"{formatted_directory_block}\n"
+                    f"{formatted_proxy_block if is_proxy else formatted_directory_block}\n"
                     "</VirtualHost>\n"
                 )
         if https_enabled:
             blocks.append(
                 "<VirtualHost *:443>\n"
-                f"{indent(f'ServerName {names.split()[0]}')}\n"
-                f"{indent(f'ServerAlias {' '.join(names.split()[1:]) if len(names.split()) > 1 else ''}')}\n"
-                f"{indent(f'DocumentRoot {docroot}')}\n"
+                f"{indent(f'ServerName {main_name}')}\n"
+                f"{server_alias_line()}\n"
+                f"{indent(f'DocumentRoot {docroot}') if not is_proxy else ''}\n"
                 f"{indent('SSLEngine on')}\n"
                 f"{indent(f'SSLCertificateFile {certfile}')}\n"
                 f"{indent(f'SSLCertificateKeyFile {keyfile}')}\n"
                 f"{indent('ErrorLog ${APACHE_LOG_DIR}/error.log')}\n"
                 f"{indent('CustomLog ${APACHE_LOG_DIR}/access.log combined')}\n"
-                f"{formatted_directory_block}\n"
+                f"{formatted_proxy_block if is_proxy else formatted_directory_block}\n"
                 "</VirtualHost>\n"
             )
         return "\n".join(blocks)
@@ -321,23 +334,47 @@ class ApacheConfigDialog(Gtk.Dialog):
         self.check_redirect = Gtk.CheckButton(label="Redirigir HTTP a HTTPS")
         grid.attach(self.check_redirect, 1, 6, 2, 1)
 
+        # Opción para proxy inverso
+        self.radio_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        self.radio_docroot = Gtk.RadioButton.new_with_label_from_widget(None, "Usar DocumentRoot")
+        self.radio_proxy = Gtk.RadioButton.new_with_label_from_widget(self.radio_docroot, "Usar Proxy Inverso")
+        self.radio_box.pack_start(self.radio_docroot, False, False, 0)
+        self.radio_box.pack_start(self.radio_proxy, False, False, 0)
+        grid.attach(self.radio_box, 1, 7, 2, 1)
+
+        lbl_proxy = Gtk.Label(label="Proxy destino (IP:PUERTO):")
+        lbl_proxy.set_halign(Gtk.Align.END)
+        self.entry_proxy = Gtk.Entry()
+        self.entry_proxy.set_placeholder_text("127.0.0.1:3000")
+        grid.attach(lbl_proxy, 0, 8, 1, 1)
+        grid.attach(self.entry_proxy, 1, 8, 2, 1)
+
         # Mostrar/ocultar campos según selección
+        def update_ssl_widgets():
+            https_active = self.check_https.get_active()
+            self.combo_ssl.set_sensitive(https_active)
+            self.check_redirect.set_sensitive(https_active)
+            is_custom = self.combo_ssl.get_active_id() == "custom" and https_active
+            self.entry_ssl_custom.set_sensitive(is_custom)
+            lbl_ssl_custom.set_sensitive(is_custom)
+
         def on_https_toggled(btn):
-            self.combo_ssl.set_sensitive(btn.get_active())
-            self.check_redirect.set_sensitive(btn.get_active())
-            if not btn.get_active():
-                self.combo_ssl.set_active(-1)
-                self.check_redirect.set_active(False)
-            # Ocultar campo custom si no hay https
-            self.entry_ssl_custom.set_sensitive(False)
-            lbl_ssl_custom.set_sensitive(False)
+            update_ssl_widgets()
         self.check_https.connect("toggled", on_https_toggled)
 
         def on_ssl_combo_changed(combo):
-            is_custom = combo.get_active_id() == "custom"
-            self.entry_ssl_custom.set_sensitive(is_custom)
-            lbl_ssl_custom.set_sensitive(is_custom)
+            update_ssl_widgets()
         self.combo_ssl.connect("changed", on_ssl_combo_changed)
+
+        def on_proxy_toggled(btn):
+            is_proxy = self.radio_proxy.get_active()
+            self.entry_docroot.set_sensitive(not is_proxy)
+            lbl_docroot.set_sensitive(not is_proxy)
+            self.entry_proxy.set_sensitive(is_proxy)
+            lbl_proxy.set_sensitive(is_proxy)
+
+        self.radio_docroot.connect("toggled", on_proxy_toggled)
+        self.radio_proxy.connect("toggled", on_proxy_toggled)
 
         # Inicialización de valores
         if config:
@@ -348,6 +385,14 @@ class ApacheConfigDialog(Gtk.Dialog):
             self.combo_ssl.set_active_id(config[5] or "certbot")
             self.entry_ssl_custom.set_text(config[6] or "")
             self.check_redirect.set_active(bool(config[7]))
+            if len(config) > 8 and config[8]:
+                self.radio_proxy.set_active(True)
+            else:
+                self.radio_docroot.set_active(True)
+            if len(config) > 9:
+                self.entry_proxy.set_text(config[9] or "")
+            else:
+                self.entry_proxy.set_text("")
         else:
             self.check_http.set_active(True)
             self.check_https.set_active(False)
@@ -355,13 +400,12 @@ class ApacheConfigDialog(Gtk.Dialog):
             self.combo_ssl.set_active_id("certbot")
             self.entry_ssl_custom.set_text("")
             self.check_redirect.set_active(False)
+            self.radio_docroot.set_active(True)
+            self.entry_proxy.set_text("")
 
         # Estado inicial de widgets
-        self.combo_ssl.set_sensitive(self.check_https.get_active())
-        self.check_redirect.set_sensitive(self.check_https.get_active())
-        is_custom = self.combo_ssl.get_active_id() == "custom" and self.check_https.get_active()
-        self.entry_ssl_custom.set_sensitive(is_custom)
-        lbl_ssl_custom.set_sensitive(is_custom)
+        update_ssl_widgets()
+        on_proxy_toggled(None)
 
         self.show_all()
 
@@ -373,7 +417,9 @@ class ApacheConfigDialog(Gtk.Dialog):
         ssl_preset = self.combo_ssl.get_active_id() or "certbot"
         ssl_cert = self.entry_ssl_custom.get_text().strip() if ssl_preset == "custom" else ""
         redirect_http = self.check_redirect.get_active()
-        return names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http
+        is_proxy = int(self.radio_proxy.get_active())
+        proxy_target = self.entry_proxy.get_text().strip() if is_proxy else ""
+        return names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target
 
 class ApacheConfPreviewDialog(Gtk.Dialog):
     def __init__(self, parent, conf_text):
