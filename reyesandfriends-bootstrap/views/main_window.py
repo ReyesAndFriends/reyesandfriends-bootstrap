@@ -8,6 +8,8 @@ from .about_view import AboutView
 from .servers.apache_view import ApacheView
 from .servers.nginx_view import NginxView
 from .settings_view import SettingsView
+from .database.mysql_view import MysqlView
+from .database.postgre_view import PostgreView
 
 
 class MainWindow(Gtk.Window):
@@ -133,10 +135,14 @@ class MainWindow(Gtk.Window):
     def _create_views(self):
         self.home_view = HomeView(on_navigate=self._navigate_to)
         self.http_servers_view = HttpServersView(on_navigate=self._navigate_to)
-        self.sql_scripts_view = SqlScriptsView()
+        self.sql_scripts_view = SqlScriptsView(on_navigate=self._on_sql_navigate)
+        self.mysql_view = MysqlView()
+        self.postgre_view = PostgreView()
         self.stack.add_titled(self.home_view, "home", "Inicio")
         self.stack.add_titled(self.http_servers_view, "http", "Servidores HTTP")
         self.stack.add_titled(self.sql_scripts_view, "sql", "Scripts SQL")
+        self.stack.add_titled(self.mysql_view, "mysql", "MySQL")
+        self.stack.add_titled(self.postgre_view, "postgre", "PostgreSQL")
         self.apache_view = ApacheView()
         self.stack.add_titled(self.apache_view, "apache", "Apache")
         self.nginx_view = NginxView()
@@ -190,3 +196,9 @@ class MainWindow(Gtk.Window):
         }
 
         return icons.get(view_name, "applications-system-symbolic")
+
+    def _on_sql_navigate(self, db_type):
+        if db_type == "mysql":
+            self._navigate_to("mysql")
+        elif db_type == "postgre":
+            self._navigate_to("postgre")
