@@ -2,6 +2,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf
 import os
+import shutil
 from config import get_workdir
 
 from service.apache_database_service import (
@@ -90,12 +91,15 @@ class ApacheView(Gtk.Box):
         self.btn_editar = Gtk.Button(label="Editar")
         self.btn_eliminar = Gtk.Button(label="Eliminar")
         self.btn_generar = Gtk.Button(label="Generar .conf")
+        self.btn_abrir_carpeta = Gtk.Button(label="Abrir carpeta")  # Nuevo botón
         self.btn_editar.set_sensitive(False)
         self.btn_eliminar.set_sensitive(False)
         self.btn_generar.set_sensitive(False)
+        self.btn_abrir_carpeta.set_sensitive(False)
         btns_box.pack_start(self.btn_nueva, False, False, 0)
         btns_box.pack_start(self.btn_editar, False, False, 0)
         btns_box.pack_start(self.btn_eliminar, False, False, 0)
+        btns_box.pack_start(self.btn_abrir_carpeta, False, False, 0)
         btns_box.pack_end(self.btn_generar, False, False, 0)
         crud_box.pack_start(btns_box, False, False, 0)
 
@@ -103,6 +107,7 @@ class ApacheView(Gtk.Box):
         self.btn_editar.connect("clicked", self._on_editar_clicked)
         self.btn_eliminar.connect("clicked", self._on_eliminar_clicked)
         self.btn_generar.connect("clicked", self._on_generar_clicked)
+        self.btn_abrir_carpeta.connect("clicked", self._on_abrir_carpeta_clicked)
 
         self.pack_start(crud_box, True, True, 0)
 
@@ -125,6 +130,21 @@ class ApacheView(Gtk.Box):
         self.btn_editar.set_sensitive(is_selected)
         self.btn_eliminar.set_sensitive(is_selected)
         self.btn_generar.set_sensitive(is_selected)
+        self.btn_abrir_carpeta.set_sensitive(is_selected)
+
+    def _on_abrir_carpeta_clicked(self, *_):
+        selection = self.treeview.get_selection()
+        model, treeiter = selection.get_selected()
+        if treeiter:
+            server_names = model[treeiter][1]
+            main_name = [n.strip() for n in server_names.split(",") if n.strip()][0] if server_names else None
+            workdir = get_workdir()
+            apache_dir = os.path.join(workdir, "http-configs", "apache")
+            conf_dir = os.path.join(apache_dir, main_name) if main_name else None
+            if conf_dir and os.path.isdir(conf_dir):
+                os.system(f'xdg-open "{conf_dir}"')
+            else:
+                self._show_notification("La carpeta no existe. Primero genere el archivo .conf.")
 
     def _on_nueva_clicked(self, *_):
         dialog = ApacheConfigDialog(self.get_toplevel(), "Nueva configuración")
@@ -141,13 +161,12 @@ class ApacheView(Gtk.Box):
         if treeiter:
             id_ = model[treeiter][0]
             config = get_apache_config(id_)
-            # Guardar el nombre principal antes de editar
             old_server_names = config[1]
             old_main_name = [n.strip() for n in old_server_names.split(",") if n.strip()][0] if old_server_names else None
-            old_conf_filename = f"{old_main_name}.conf" if old_main_name else None
             workdir = get_workdir()
             apache_dir = os.path.join(workdir, "http-configs", "apache")
-            old_conf_path = os.path.join(apache_dir, old_conf_filename) if old_conf_filename else None
+            old_conf_dir = os.path.join(apache_dir, old_main_name) if old_main_name else None
+            old_conf_path = os.path.join(old_conf_dir, f"{old_main_name}.conf") if old_main_name else None
             file_exists = old_conf_path and os.path.isfile(old_conf_path)
 
             dialog = ApacheConfigDialog(self.get_toplevel(), "Editar configuración", config)
@@ -156,10 +175,9 @@ class ApacheView(Gtk.Box):
                 data = dialog.get_data()
                 new_server_names = data[0]
                 new_main_name = [n.strip() for n in new_server_names.split(",") if n.strip()][0] if new_server_names else None
-                new_conf_filename = f"{new_main_name}.conf" if new_main_name else None
-                new_conf_path = os.path.join(apache_dir, new_conf_filename) if new_conf_filename else None
+                new_conf_dir = os.path.join(apache_dir, new_main_name) if new_main_name else None
+                new_conf_path = os.path.join(new_conf_dir, f"{new_main_name}.conf") if new_main_name else None
 
-                # Si el nombre principal cambió y el archivo viejo existe
                 if file_exists and old_main_name != new_main_name:
                     dialog_conf = Gtk.MessageDialog(
                         transient_for=self.get_toplevel(),
@@ -175,9 +193,8 @@ class ApacheView(Gtk.Box):
                     response_conf = dialog_conf.run()
                     dialog_conf.destroy()
                     if response_conf == 1:
-                        # Renombrar el archivo al nuevo nombre y sobreescribir con la nueva configuración
                         try:
-                            # Generar la nueva configuración
+                            os.makedirs(new_conf_dir, exist_ok=True)
                             conf_text = self._generate_apache_conf(*data)
                             if os.path.isfile(new_conf_path):
                                 os.remove(new_conf_path)
@@ -188,14 +205,12 @@ class ApacheView(Gtk.Box):
                         except Exception as e:
                             self._show_notification(f"Error al renombrar o actualizar:\n{e}")
                     elif response_conf == 3:
-                        # Borrar el archivo viejo
                         try:
                             os.remove(old_conf_path)
                             self._show_notification("Archivo .conf anterior eliminado.")
                         except Exception as e:
                             self._show_notification(f"Error al eliminar archivo:\n{e}")
                     elif response_conf == 2:
-                        # Ignorar: se creará un nuevo archivo, notificar
                         self._show_notification("Se creará un nuevo archivo .conf, el anterior no será modificado.")
 
                 update_apache_config(id_, *data)
@@ -208,7 +223,6 @@ class ApacheView(Gtk.Box):
         if treeiter:
             id_ = model[treeiter][0]
             config = get_apache_config(id_)
-            # Confirmación antes de eliminar
             dialog = Gtk.MessageDialog(
                 transient_for=self.get_toplevel(),
                 flags=0,
@@ -219,15 +233,13 @@ class ApacheView(Gtk.Box):
             response = dialog.run()
             dialog.destroy()
             if response == Gtk.ResponseType.YES:
-                # Buscar archivo .conf asociado
                 server_names = config[1]
                 main_name = [n.strip() for n in server_names.split(",") if n.strip()][0] if server_names else None
-                conf_filename = f"{main_name}.conf" if main_name else None
                 workdir = get_workdir()
                 apache_dir = os.path.join(workdir, "http-configs", "apache")
-                conf_path = os.path.join(apache_dir, conf_filename) if conf_filename else None
+                conf_dir = os.path.join(apache_dir, main_name) if main_name else None
+                conf_path = os.path.join(conf_dir, f"{main_name}.conf") if main_name else None
                 file_exists = conf_path and os.path.isfile(conf_path)
-                # Si existe el archivo, preguntar si también eliminarlo
                 if file_exists:
                     dialog2 = Gtk.MessageDialog(
                         transient_for=self.get_toplevel(),
@@ -254,12 +266,10 @@ class ApacheView(Gtk.Box):
             id_ = model[treeiter][0]
             config = get_apache_config(id_)
             if config:
-                # Desempaquetar nuevos campos
                 (server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target) = (
                     config[1], config[2], config[3], config[4], config[5], config[6], config[7], config[8], config[9]
                 )
                 conf_text = self._generate_apache_conf(server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target)
-                # Obtener el dominio principal para sugerir el nombre de archivo
                 main_name = [n.strip() for n in server_names.split(",") if n.strip()][0] if server_names else "apache-website"
                 suggested_filename = f"{main_name}.conf"
                 preview_dialog = ApacheConfPreviewDialog(self.get_toplevel(), conf_text, suggested_filename)
@@ -270,14 +280,14 @@ class ApacheView(Gtk.Box):
                     if save_option == "workdir":
                         workdir = get_workdir()
                         apache_dir = os.path.join(workdir, "http-configs", "apache")
-                        os.makedirs(apache_dir, exist_ok=True)
-                        filepath = os.path.join(apache_dir, filename)
+                        conf_dir = os.path.join(apache_dir, main_name)
+                        os.makedirs(conf_dir, exist_ok=True)
+                        filepath = os.path.join(conf_dir, filename)
                     else:
                         filepath = preview_dialog.get_custom_path()
                         if not filepath:
                             preview_dialog.destroy()
                             return
-                    # Verificar si el archivo ya existe y pedir confirmación para sobreescribir
                     if os.path.isfile(filepath):
                         dialog_overwrite = Gtk.MessageDialog(
                             transient_for=self.get_toplevel(),
@@ -291,6 +301,15 @@ class ApacheView(Gtk.Box):
                         if resp_overwrite != Gtk.ResponseType.YES:
                             preview_dialog.destroy()
                             return
+                        # Solo borrar la carpeta si estamos en workdir y la carpeta existe
+                        if save_option == "workdir" and os.path.isdir(conf_dir):
+                            try:
+                                shutil.rmtree(conf_dir)
+                                os.makedirs(conf_dir, exist_ok=True)
+                            except Exception as e:
+                                self._show_notification(f"Error al borrar la carpeta anterior:\n{e}")
+                                preview_dialog.destroy()
+                                return
                     try:
                         with open(filepath, "w") as f:
                             f.write(conf_text)
