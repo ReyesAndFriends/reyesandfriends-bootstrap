@@ -1,8 +1,11 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
+
 import Home from '../views/Home'
 import Servers from '../views/Servers'
 import Databases from '../views/Databases'
+import Preferences from '../views/Preferences'
+import About from '../views/About'
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -45,7 +48,7 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/sql-scripts"
+          path="/databases"
           element={
             <motion.div
               variants={pageVariants}
@@ -58,7 +61,36 @@ const AppRoutes = () => {
             </motion.div>
           }
         />
+        <Route
+          path="/preferences"
+          element={
+            <motion.div
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: "tween", duration: 0.2 }}
+            >
+              <Preferences />
+            </motion.div>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <motion.div
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: "tween", duration: 0.2 }}
+            >
+              <About />
+            </motion.div>
+          }
+        />
       </Routes>
+
     </AnimatePresence>
   );
 };

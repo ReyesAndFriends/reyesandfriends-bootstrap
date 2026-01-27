@@ -60,7 +60,7 @@ function Home() {
             </div>
           </Link>
 
-          <Link to="/sql-scripts" className="callout" style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+          <Link to="/databases" className="callout" style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
             <img
               src="/icons/sqlitebrowser.svg"
               alt="Base de datos"
@@ -72,7 +72,7 @@ function Home() {
             </div>
           </Link>
 
-          <Link to="/settings" className="callout" style={{ display: 'flex', alignItems: 'center' }}>
+          <Link to="/preferences" className="callout" style={{ display: 'flex', alignItems: 'center' }}>
             <img
               src="/icons/preferences-desktop-icons.svg"
               alt="Herramientas"
