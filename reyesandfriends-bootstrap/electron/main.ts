@@ -1,9 +1,7 @@
-import { app, BrowserWindow } from 'electron'
-import { createRequire } from 'node:module'
+import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -13,7 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // │ │
 // │ ├─┬ dist-electron
 // │ │ ├── main.js
-// │ │ └── preload.mjs
+// │ │ └── preload.js
 // │
 process.env.APP_ROOT = path.join(__dirname, '..')
 
@@ -32,7 +30,10 @@ function createWindow() {
     height: 720,
     icon: path.join(process.env.VITE_PUBLIC, 'app_icon.png'),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.mjs'),
+      preload: path.join(
+        __dirname,
+        process.env.NODE_ENV === 'development' ? 'preload.js' : 'preload.mjs'
+      ),
     },
   })
 
@@ -68,3 +69,15 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(createWindow)
+
+// --- IPC handler para seleccionar carpeta ---
+ipcMain.handle('select-workdir', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+    title: 'Selecciona el directorio de trabajo',
+  })
+  if (result.canceled || result.filePaths.length === 0) {
+    return null
+  }
+  return result.filePaths[0]
+})

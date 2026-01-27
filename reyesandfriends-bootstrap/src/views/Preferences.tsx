@@ -1,36 +1,135 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+
+declare global {
+  interface Window {
+    settingsAPI?: {
+      getWorkdir: () => Promise<string>;
+      setWorkdir: (path: string) => Promise<void>;
+      selectWorkdir: () => Promise<string | null>;
+      getDefaultWorkdir: () => Promise<string>;
+    };
+  }
+}
 
 const Preferences: React.FC = () => {
-  const [workPath, setWorkPath] = useState("");
+  const [workdir, setWorkdir] = useState("");
+  const [input, setInput] = useState("");
+  const [defaultWorkdir, setDefaultWorkdir] = useState("");
+  const [selecting, setSelecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Aquí se manejará el path en el futuro (integración con Electron)
-    alert(`Path de trabajo guardado: ${workPath}`);
+  useEffect(() => {
+    if (!window.settingsAPI) return;
+    window.settingsAPI.getWorkdir().then((dir) => {
+      setWorkdir(dir);
+      setInput(dir);
+    });
+    window.settingsAPI.getDefaultWorkdir().then((dir) => {
+      setDefaultWorkdir(dir);
+    });
+  }, []);
+
+  const handleSave = async () => {
+    setError(null);
+    try {
+      await window.settingsAPI?.setWorkdir(input);
+      setWorkdir(input);
+    } catch (e) {
+      setError("No se pudo guardar el directorio.");
+    }
   };
 
-  return (
-    <div className="grid-container">
-      <div className="grid-x grid-padding-x align-center">
-        <div className="cell medium-6">
-          <h2 className="text-center">Preferencias</h2>
-          <form onSubmit={handleSubmit}>
-            <label>
-              Path de trabajo
-              <input
-                type="text"
-                placeholder="Ejemplo: /home/usuario/proyectos"
-                value={workPath}
-                onChange={e => setWorkPath(e.target.value)}
-                required
-              />
-            </label>
-            <button type="submit" className="button primary expanded">
-              Guardar
-            </button>
-          </form>
-        </div>
+  const handleSelectFolder = async () => {
+    setSelecting(true);
+    setError(null);
+    try {
+      const selected = await window.settingsAPI?.selectWorkdir();
+      if (selected) {
+        setInput(selected);
+        await window.settingsAPI?.setWorkdir(selected);
+        setWorkdir(selected);
+      }
+    } catch (e) {
+      setError("No se pudo seleccionar la carpeta.");
+    }
+    setSelecting(false);
+  };
+
+  const handleRestore = async () => {
+    setError(null);
+    try {
+      setInput(defaultWorkdir);
+      await window.settingsAPI?.setWorkdir(defaultWorkdir);
+      setWorkdir(defaultWorkdir);
+    } catch (e) {
+      setError("No se pudo restaurar el directorio original.");
+    }
+  };
+
+  if (!window.settingsAPI) {
+    return (
+      <div className="callout alert" style={{ margin: "2rem auto", maxWidth: 600 }}>
+        Esta vista solo funciona en la app Electron.<br />
+        Abre la aplicación usando el entorno de escritorio.
       </div>
+    );
+  }
+
+  return (
+    <div className="callout secondary" style={{ maxWidth: 600, margin: "2rem auto" }}>
+      <h4>Preferencias</h4>
+      <div className="callout primary" style={{ marginBottom: 16 }}>
+        <label>
+          <b>Directorio de trabajo actual:</b>
+        </label>
+        <div style={{ fontFamily: "monospace", wordBreak: "break-all" }}>{workdir}</div>
+      </div>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          handleSave();
+        }}
+      >
+        <label>
+          Cambiar directorio de trabajo:
+          <div className="input-group">
+            <input
+              className="input-group-field"
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              style={{ minWidth: 300 }}
+            />
+            <div className="input-group-button">
+              <button
+                type="button"
+                className="button primary"
+                onClick={handleSelectFolder}
+                disabled={selecting}
+                title="Seleccionar carpeta..."
+              >
+                <i className="fi-folder" style={{ marginRight: 4 }} /> {selecting ? "Abriendo..." : "Seleccionar"}
+              </button>
+            </div>
+          </div>
+        </label>
+        <div style={{ marginTop: 12 }}>
+          <button type="submit" className="button success" style={{ marginRight: 8 }}>
+            Guardar
+          </button>
+          <button type="button" className="button warning" onClick={handleRestore}>
+            Restaurar original
+          </button>
+        </div>
+      </form>
+      <div style={{ marginTop: 16, fontSize: 12, color: "#888" }}>
+        Valor original: <span style={{ fontFamily: "monospace" }}>{defaultWorkdir}</span>
+      </div>
+      {error && (
+        <div className="callout alert" style={{ marginTop: 16 }}>
+          {error}
+        </div>
+      )}
     </div>
   );
 };
