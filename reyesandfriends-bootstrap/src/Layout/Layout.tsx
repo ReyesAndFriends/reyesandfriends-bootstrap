@@ -5,7 +5,7 @@ const sidebarButtons = [
   { label: "Inicio", icon: "/icons/folder.svg", route: "/" },
   { label: "Servidores HTTP", icon: "/icons/network-server.svg", route: "/http-servers" },
   { label: "Scripts SQL", icon: "/icons/sqlitebrowser.svg", route: "/sql-scripts" },
-  { label: "Configuración", icon: "/icons/preferences-desktop-icons.svg", route: "/settings" },
+  { label: "Preferencias", icon: "/icons/preferences-desktop-icons.svg", route: "/settings" },
   { label: "Acerca de", icon: "/icons/help-about.svg", route: "/about" },
 ];
 
@@ -14,7 +14,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     className="off-canvas-wrapper"
     style={{
       minHeight: "100vh",
-      color: "#23272f",
+      color: "#111",
       background: "#f8f9fa",
       height: "100vh",
       overflow: "hidden",
@@ -28,12 +28,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
       <aside
         className="sidebar-dark"
         style={{
-          width: 240,
-          background: "#18191a",
-          padding: "2rem 1rem",
+          width: 150,
+          background: "#111",
+          padding: "1.2rem 0.5rem",
           display: "flex",
           flexDirection: "column",
-          gap: "1rem",
+          gap: "0.6rem",
           minHeight: "100vh",
           color: "#f1f1f1",
           flexShrink: 0,
@@ -42,7 +42,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
       >
         <div
           style={{
-            marginBottom: "2rem",
+            marginBottom: "1.2rem",
             textAlign: "center",
             userSelect: "none",
             WebkitUserSelect: "none",
@@ -50,7 +50,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
             msUserSelect: "none",
           }}
         >
-          <h5 style={{ color: "#fff", margin: 0 }}>Reyes&Friends Bootstrap</h5>
+          <h5 style={{ color: "#fff", margin: 0, fontSize: "1rem", lineHeight: "1.1" }}>Reyes&Friends<br />Bootstrap</h5>
         </div>
 
         {sidebarButtons.map((btn) => (
@@ -58,30 +58,31 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
             key={btn.label}
             to={btn.route}
             style={{
-              background: "#18191a",
+              background: "#111",
               color: "#f1f1f1",
               border: "none",
               borderRadius: "2px",
-              padding: "0.75rem 0",
+              padding: "0.5rem 0",
               textAlign: "center",
-              fontSize: "1rem",
+              fontSize: "0.92rem",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: "0.25rem",
+              gap: "0.18rem",
               cursor: "pointer",
               width: "100%",
             }}
             onMouseOver={e => (e.currentTarget.style.background = "#31343b")}
-            onMouseOut={e => (e.currentTarget.style.background = "#18191a")}
+            onMouseOut={e => (e.currentTarget.style.background = "#111")}
           >
             {btn.icon.endsWith(".svg") ? (
-              <img src={btn.icon} alt={btn.label} style={{ width: "auto", height: 36 }} />
+              <img src={btn.icon} alt={btn.label} style={{ width: 28, height: 28, objectFit: "contain" }} />
             ) : null}
-            <span style={{ fontSize: "1rem", display: "block" }}>{btn.label}</span>
+            <span style={{ fontSize: "0.92rem", display: "block", wordBreak: "break-word" }}>{btn.label}</span>
           </Link>
         ))}
       </aside>
+      
       <main
         className="off-canvas-content"
         data-off-canvas-content

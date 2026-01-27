@@ -1,49 +1,88 @@
+import { Link } from "react-router-dom";
+
 function Home() {
   return (
     <>
-      <div className="callout primary">
-        <div className="row column">
-          <h1>Hello! This is the portfolio of a very witty person.</h1>
-          <p className="lead">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus luctus urna sed urna ultricies ac tempor dui sagittis. In condimentum facilisis porta. Sed nec diam eu diam mattis viverra. Nulla fringilla.
-          </p>
+      <div
+        className="callout"
+        style={{
+          background: 'linear-gradient(135deg, #7d0e0e 0%, rgb(132, 17, 17) 100%)',
+          color: 'white'
+        }}
+      >
+        <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
+          <img
+        src="/icons/app_icon.png"
+        alt="Icono"
+        style={{ width: 64, height: 64, marginRight: 24, background: 'transparent' }}
+          />
+          <div>
+        <h1 style={{ color: 'white' }}>Simplifica tus tareas repetitivas</h1>
+        <p className="lead" style={{ color: 'white' }}>
+          Un gestor de utilidades para desarrolladores y administradores de sistemas para una puesta a producción rápida.
+        </p>
+          </div>
         </div>
       </div>
-      <div className="row small-up-2 medium-up-3 large-up-4">
-        {[...Array(2)].map((_, i) => (
-          <div className="column" key={i}>
-            <img className="thumbnail" src="https://placehold.it/550x550" alt="site" />
-            <h5>My Site</h5>
-          </div>
-        ))}
-      </div>
-      <hr />
+      
       <div className="row">
         <div className="medium-6 columns">
-          <h3>Contact Me</h3>
+          <h3>Te damos la bienvenida</h3>
           <p>
-            Vivamus hendrerit arcu sed erat molestie vehicula. Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor. Ut in nulla enim. Phasellus molestie magna non est bibendum non venenatis nisl tempor. Suspendisse dictum feugiat nisl ut dapibus. Mauris iaculis porttitor.
+            En este programa puedes encontrar diversas utilidades diseñadas para facilitar y acelerar el proceso de puesta a producción de tus proyectos. Desdes scripts para servidores web, bases de datos, entre otras herramientas útiles.
           </p>
-          <ul className="menu">
-            <li><a href="#">Dribbble</a></li>
-            <li><a href="#">Facebook</a></li>
-            <li><a href="#">Yo</a></li>
-          </ul>
+            <p>Sabemos que estas tareas no son difíciles, pero sí repetitivas.</p>
         </div>
-        <div className="medium-6 columns">
-          <label>
-            Name
-            <input type="text" placeholder="Name" />
-          </label>
-          <label>
-            Email
-            <input type="text" placeholder="Email" />
-          </label>
-          <label>
-            Message
-            <textarea placeholder="holla at a designerd"></textarea>
-          </label>
-          <input type="submit" className="button expanded" value="Submit" />
+
+      </div>
+
+      <div className="row align-center" style={{ marginTop: 40 }}>
+        <div
+          className="small-12 columns"
+          style={{
+            maxWidth: 500,
+            margin: '0 auto',
+            paddingLeft: 0,
+            paddingRight: 0
+          }}
+        >
+          <h4 className="text-center">Para empezar, selecciona una categoría:</h4>
+          
+          <Link to="/http-servers" className="callout" style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+            <img
+              src="/icons/network-server.svg"
+              alt="Servidor"
+              style={{ width: 40, height: 40, marginRight: 20 }}
+            />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 'bold', fontSize: 18 }}>Scripts para servidores web</div>
+              <div style={{ color: '#555', fontSize: 14 }}>Automatiza tareas comunes en servidores web.</div>
+            </div>
+          </Link>
+
+          <Link to="/sql-scripts" className="callout" style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+            <img
+              src="/icons/sqlitebrowser.svg"
+              alt="Base de datos"
+              style={{ width: 40, height: 40, marginRight: 20 }}
+            />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 'bold', fontSize: 18 }}>Bases de datos</div>
+              <div style={{ color: '#555', fontSize: 14 }}>Herramientas para gestión y migración de bases de datos.</div>
+            </div>
+          </Link>
+
+          <Link to="/settings" className="callout" style={{ display: 'flex', alignItems: 'center' }}>
+            <img
+              src="/icons/preferences-desktop-icons.svg"
+              alt="Herramientas"
+              style={{ width: 40, height: 40, marginRight: 20 }}
+            />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 'bold', fontSize: 18 }}>Preferencias</div>
+              <div style={{ color: '#555', fontSize: 14 }}>Gestiona las configuraciones de la aplicación.</div>
+            </div>
+          </Link>
         </div>
       </div>
     </>
