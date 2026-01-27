@@ -107,21 +107,17 @@ class MysqlView(Gtk.Box):
         for row in list_mysql_databases():
             self.liststore.append(row)
 
-    def _on_selection_changed(self, selection):
+    def _update_btn_abrir_carpeta(self):
+        """Actualiza el estado del botón de abrir carpeta según la selección y existencia del archivo."""
+        selection = self.treeview.get_selection()
         model, treeiter = selection.get_selected()
-        is_selected = treeiter is not None
-        self.btn_editar.set_sensitive(is_selected)
-        self.btn_eliminar.set_sensitive(is_selected)
-        self.btn_generar.set_sensitive(is_selected)
-
-        if is_selected:
+        if treeiter:
             db_name = model[treeiter][1]
             workdir = get_workdir()
             sql_dir = os.path.join(workdir, "sql_scripts", "mysql", db_name)
             sql_file = f"{db_name}.sql"
             exists = False
             if os.path.isdir(sql_dir):
-                # Comprobación robusta: busca el archivo exacto (case-insensitive, ignora espacios)
                 for fname in os.listdir(sql_dir):
                     if fname.strip().lower() == sql_file.strip().lower() and os.path.isfile(os.path.join(sql_dir, fname)):
                         exists = True
@@ -129,6 +125,14 @@ class MysqlView(Gtk.Box):
             self.btn_abrir_carpeta.set_sensitive(exists)
         else:
             self.btn_abrir_carpeta.set_sensitive(False)
+
+    def _on_selection_changed(self, selection):
+        model, treeiter = selection.get_selected()
+        is_selected = treeiter is not None
+        self.btn_editar.set_sensitive(is_selected)
+        self.btn_eliminar.set_sensitive(is_selected)
+        self.btn_generar.set_sensitive(is_selected)
+        self._update_btn_abrir_carpeta()
 
     def _on_abrir_directorio_clicked(self, *_):
         workdir = get_workdir()
@@ -155,6 +159,8 @@ class MysqlView(Gtk.Box):
             else:
                 self._show_notification("El archivo no existe. Primero genere el script .sql.")
 
+        self._update_btn_abrir_carpeta()
+
     def _on_nueva_clicked(self, *_):
         dialog = MysqlConfigDialog(self.get_toplevel(), "Nueva base de datos")
         response = dialog.run()
@@ -163,6 +169,7 @@ class MysqlView(Gtk.Box):
             create_mysql_database(*data)
             self._refresh_liststore()
         dialog.destroy()
+        self._update_btn_abrir_carpeta()
 
     def _on_editar_clicked(self, *_):
         selection = self.treeview.get_selection()
@@ -201,7 +208,6 @@ class MysqlView(Gtk.Box):
                     if response_conf == 1:
                         try:
                             os.makedirs(new_sql_dir, exist_ok=True)
-                            # Renombrar el archivo
                             if os.path.isfile(new_sql_path):
                                 os.remove(new_sql_path)
                             os.rename(old_sql_path, new_sql_path)
@@ -220,6 +226,7 @@ class MysqlView(Gtk.Box):
                 update_mysql_database(id_, *data)
                 self._refresh_liststore()
             dialog.destroy()
+            self._update_btn_abrir_carpeta()
 
     def _on_eliminar_clicked(self, *_):
         selection = self.treeview.get_selection()
@@ -244,7 +251,6 @@ class MysqlView(Gtk.Box):
             response = dialog.run()
             dialog.destroy()
             if response == Gtk.ResponseType.YES:
-                # Preguntar si también eliminar archivos .sql si existen
                 if file_exists:
                     dialog2 = Gtk.MessageDialog(
                         transient_for=self.get_toplevel(),
@@ -263,6 +269,7 @@ class MysqlView(Gtk.Box):
                 delete_mysql_database(id_)
                 self._refresh_liststore()
                 self._show_notification("Registro eliminado correctamente.")
+            self._update_btn_abrir_carpeta()
 
     def _on_generar_clicked(self, *_):
         selection = self.treeview.get_selection()
@@ -307,6 +314,7 @@ class MysqlView(Gtk.Box):
                 except Exception as e:
                     self._show_notification(f"Error al guardar:\n{e}")
             preview_dialog.destroy()
+            self._update_btn_abrir_carpeta()
 
     def _show_notification(self, message):
         dialog = Gtk.MessageDialog(
