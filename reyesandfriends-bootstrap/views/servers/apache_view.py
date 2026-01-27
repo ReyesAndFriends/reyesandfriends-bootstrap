@@ -19,7 +19,7 @@ class ApacheView(Gtk.Box):
         self.set_margin_end(32)
 
         header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
-        header_box.set_halign(Gtk.Align.START)
+        header_box.set_halign(Gtk.Align.FILL)
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         apache_icon_path = os.path.join(base_dir, "assets", "icons", "apache.svg")
         apache_img = Gtk.Image()
@@ -33,6 +33,13 @@ class ApacheView(Gtk.Box):
         title.set_markup("<span size='x-large' weight='bold'>Configuraciones Apache</span>")
         title.set_halign(Gtk.Align.START)
         header_box.pack_start(title, False, False, 0)
+
+        # Botón "Abrir Directorio" arriba a la derecha
+        self.btn_abrir_directorio = Gtk.Button(label="Abrir Directorio")
+        self.btn_abrir_directorio.set_halign(Gtk.Align.END)
+        self.btn_abrir_directorio.connect("clicked", self._on_abrir_directorio_clicked)
+        header_box.pack_end(self.btn_abrir_directorio, False, False, 0)
+
         self.pack_start(header_box, False, False, 0)
 
         crud_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -91,7 +98,7 @@ class ApacheView(Gtk.Box):
         self.btn_editar = Gtk.Button(label="Editar")
         self.btn_eliminar = Gtk.Button(label="Eliminar")
         self.btn_generar = Gtk.Button(label="Generar .conf")
-        self.btn_abrir_carpeta = Gtk.Button(label="Abrir carpeta")  # Nuevo botón
+        self.btn_abrir_carpeta = Gtk.Button(label="Directorio")
         self.btn_editar.set_sensitive(False)
         self.btn_eliminar.set_sensitive(False)
         self.btn_generar.set_sensitive(False)
@@ -141,6 +148,13 @@ class ApacheView(Gtk.Box):
             self.btn_abrir_carpeta.set_sensitive(conf_path and os.path.isfile(conf_path))
         else:
             self.btn_abrir_carpeta.set_sensitive(False)
+
+    def _on_abrir_directorio_clicked(self, *_):
+
+        workdir = get_workdir()
+        apache_dir = os.path.join(workdir, "http-configs", "apache")
+        os.makedirs(apache_dir, exist_ok=True)
+        os.system(f'xdg-open "{apache_dir}"')
 
     def _on_abrir_carpeta_clicked(self, *_):
         selection = self.treeview.get_selection()
