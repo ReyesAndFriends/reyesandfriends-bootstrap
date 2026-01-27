@@ -51,7 +51,7 @@ class MysqlView(Gtk.Box):
 
         list_frame = Gtk.Frame()
         list_frame.set_shadow_type(Gtk.ShadowType.IN)
-        self.liststore = Gtk.ListStore(int, str, str, str, str, str, str)
+        self.liststore = Gtk.ListStore(int, str, str, str, str, str, str, str)  # +charset
         self._refresh_liststore()
         self.treeview = Gtk.TreeView(model=self.liststore)
         renderer_text = Gtk.CellRendererText()
@@ -62,6 +62,7 @@ class MysqlView(Gtk.Box):
             ("Host", 5),
             ("Privilegios", 4),
             ("Preset", 6),
+            ("Codificación", 7),
         ]
         for col_name, idx in cols:
             col = Gtk.TreeViewColumn(col_name, renderer_text, text=idx)
@@ -268,8 +269,8 @@ class MysqlView(Gtk.Box):
         model, treeiter = selection.get_selected()
         if treeiter:
             row = self.liststore[treeiter]
-            db_name, user_name, user_password, privileges, host = row[1], row[2], row[3], row[4], row[5]
-            sql = generate_mysql_sql(db_name, user_name, user_password, privileges, host)
+            db_name, user_name, user_password, privileges, host, charset = row[1], row[2], row[3], row[4], row[5], row[7]
+            sql = generate_mysql_sql(db_name, user_name, user_password, privileges, host, charset)
             suggested_filename = f"{db_name}.sql"
             preview_dialog = MysqlSQLPreviewDialog(self.get_toplevel(), sql, suggested_filename)
             response = preview_dialog.run()
@@ -319,6 +320,15 @@ class MysqlView(Gtk.Box):
         dialog.destroy()
 
 class MysqlConfigDialog(Gtk.Dialog):
+    CHARSETS = [
+        ("utf8mb4", "UTF-8 multibyte (recomendado)"),
+        ("utf8", "UTF-8"),
+        ("latin1", "Latin1"),
+        ("ascii", "ASCII"),
+        ("ucs2", "UCS-2"),
+        ("utf16", "UTF-16"),
+        ("utf32", "UTF-32"),
+    ]
     def __init__(self, parent, title, config=None):
         super().__init__(title, parent, 0,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
@@ -404,6 +414,16 @@ class MysqlConfigDialog(Gtk.Dialog):
             self._validate_fields()
         self.combo_preset.connect("changed", on_preset_changed)
 
+        # --- Charset ---
+        lbl_charset = Gtk.Label(label="Codificación (charset):")
+        lbl_charset.set_halign(Gtk.Align.END)
+        self.combo_charset = Gtk.ComboBoxText()
+        for val, desc in self.CHARSETS:
+            self.combo_charset.append_text(f"{val} - {desc}")
+        self.combo_charset.set_active(0)
+        grid.attach(lbl_charset, 0, 6, 1, 1)
+        grid.attach(self.combo_charset, 1, 6, 2, 1)
+
         # Inicialización de valores
         if config:
             self.entry_db.set_text(config[1])
@@ -427,6 +447,14 @@ class MysqlConfigDialog(Gtk.Dialog):
             preset = config[6] or "personalizado"
             idx = {"personalizado":0, "produccion":1, "desarrollo":2, "solo_lectura":3}.get(preset, 0)
             self.combo_preset.set_active(idx)
+            # Charset
+            charset = config[7] if len(config) > 7 and config[7] else "utf8mb4"
+            idx = 0
+            for i, (val, _) in enumerate(self.CHARSETS):
+                if val == charset:
+                    idx = i
+                    break
+            self.combo_charset.set_active(idx)
         else:
             self.entry_db.set_text("")
             self.entry_user.set_text("")
@@ -436,6 +464,7 @@ class MysqlConfigDialog(Gtk.Dialog):
             self.entry_host.set_text("localhost")
             self.entry_host.set_sensitive(False)
             self.combo_preset.set_active(0)
+            self.combo_charset.set_active(0)
 
         # --- Validación de campos para habilitar/deshabilitar el botón OK ---
         self.ok_button = self.get_widget_for_response(Gtk.ResponseType.OK)
@@ -483,7 +512,9 @@ class MysqlConfigDialog(Gtk.Dialog):
         else:
             host = self.entry_host.get_text().strip() or "localhost"
         preset = self.combo_preset.get_active_text() or ""
-        return db_name, user_name, user_password, privileges, host, preset
+        charset_idx = self.combo_charset.get_active()
+        charset = self.CHARSETS[charset_idx][0] if charset_idx >= 0 else "utf8mb4"
+        return db_name, user_name, user_password, privileges, host, preset, charset
 
 class MysqlSQLPreviewDialog(Gtk.Dialog):
     def __init__(self, parent, sql_text, suggested_filename="mysql.sql"):
