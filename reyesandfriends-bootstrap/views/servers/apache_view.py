@@ -5,7 +5,7 @@ import os
 import shutil
 from config import get_workdir
 
-from service.apache_database_service import (
+from service.apache_http_service import (
     list_apache_configs, create_apache_config, update_apache_config,
     delete_apache_config, get_apache_config
 )

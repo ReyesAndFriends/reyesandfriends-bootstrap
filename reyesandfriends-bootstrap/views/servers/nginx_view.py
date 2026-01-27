@@ -4,7 +4,7 @@ from gi.repository import Gtk, GdkPixbuf
 import os
 import shutil
 from config import get_workdir
-from service.nginx_database_service import (
+from service.nginx_http_service import (
     list_nginx_configs, create_nginx_config, update_nginx_config,
     delete_nginx_config, get_nginx_config
 )
