@@ -130,7 +130,17 @@ class ApacheView(Gtk.Box):
         self.btn_editar.set_sensitive(is_selected)
         self.btn_eliminar.set_sensitive(is_selected)
         self.btn_generar.set_sensitive(is_selected)
-        self.btn_abrir_carpeta.set_sensitive(is_selected)
+        # Solo habilitar "Abrir carpeta" si existe el .conf
+        if is_selected:
+            server_names = model[treeiter][1]
+            main_name = [n.strip() for n in server_names.split(",") if n.strip()][0] if server_names else None
+            workdir = get_workdir()
+            apache_dir = os.path.join(workdir, "http-configs", "apache")
+            conf_dir = os.path.join(apache_dir, main_name) if main_name else None
+            conf_path = os.path.join(conf_dir, f"{main_name}.conf") if main_name else None
+            self.btn_abrir_carpeta.set_sensitive(conf_path and os.path.isfile(conf_path))
+        else:
+            self.btn_abrir_carpeta.set_sensitive(False)
 
     def _on_abrir_carpeta_clicked(self, *_):
         selection = self.treeview.get_selection()
