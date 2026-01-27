@@ -2,6 +2,12 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf
 import os
+import shutil
+from config import get_workdir
+from service.nginx_database_service import (
+    list_nginx_configs, create_nginx_config, update_nginx_config,
+    delete_nginx_config, get_nginx_config
+)
 
 class NginxView(Gtk.Box):
     def __init__(self):
@@ -39,22 +45,561 @@ class NginxView(Gtk.Box):
 
         list_frame = Gtk.Frame()
         list_frame.set_shadow_type(Gtk.ShadowType.IN)
-        list_frame.set_size_request(-1, 180)
-        list_box = Gtk.Box()
+        self.liststore = Gtk.ListStore(int, str, int, int, str, str, str, int, int, str)
+        # id, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target
+        self._refresh_liststore()
+        self.treeview = Gtk.TreeView(model=self.liststore)
+
+        renderer_text = Gtk.CellRendererText()
+        renderer_bool = Gtk.CellRendererText()
+
+        col1 = Gtk.TreeViewColumn("Dominios", renderer_text, text=1)
+        col2 = Gtk.TreeViewColumn("HTTP", renderer_bool)
+        col2.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][2] else "No"))
+        col3 = Gtk.TreeViewColumn("HTTPS", renderer_bool)
+        col3.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][3] else "No"))
+        col4 = Gtk.TreeViewColumn("Path", renderer_text)
+        col4.set_cell_data_func(renderer_text, lambda col, cell, model, iter, data:
+            cell.set_property("text", model[iter][4] if not model[iter][8] else "No aplica"))
+        col_proxy = Gtk.TreeViewColumn("Proxy", renderer_text)
+        col_proxy.set_cell_data_func(renderer_text, lambda col, cell, model, iter, data:
+            cell.set_property("text", model[iter][9] if model[iter][8] else "No aplica"))
+        col5 = Gtk.TreeViewColumn("SSL", renderer_text, text=5)
+        col6 = Gtk.TreeViewColumn("Redirect", renderer_bool)
+        col6.set_cell_data_func(renderer_bool, lambda col, cell, model, iter, data: cell.set_property("text", "Sí" if model[iter][7] else "No"))
+
+        self.treeview.append_column(col1)
+        self.treeview.append_column(col2)
+        self.treeview.append_column(col3)
+        self.treeview.append_column(col4)
+        self.treeview.append_column(col_proxy)
+        self.treeview.append_column(col5)
+        self.treeview.append_column(col6)
+        select = self.treeview.get_selection()
+        select.connect("changed", self._on_selection_changed)
+        list_box = Gtk.ScrolledWindow()
+        list_box.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        list_box.set_vexpand(False)
+        list_box.set_size_request(-1, 220)
+        list_box.add(self.treeview)
         list_frame.add(list_box)
-        crud_box.pack_start(list_frame, True, True, 0)
+        crud_box.pack_start(list_frame, False, False, 0)
 
         btns_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        btn_nueva = Gtk.Button(label="Nueva")
-        btn_editar = Gtk.Button(label="Editar")
-        btn_eliminar = Gtk.Button(label="Eliminar")
-        btn_generar = Gtk.Button(label="Generar .conf")
-        btn_editar.set_sensitive(False)
-        btn_eliminar.set_sensitive(False)
-        btns_box.pack_start(btn_nueva, False, False, 0)
-        btns_box.pack_start(btn_editar, False, False, 0)
-        btns_box.pack_start(btn_eliminar, False, False, 0)
-        btns_box.pack_end(btn_generar, False, False, 0)
+        self.btn_nueva = Gtk.Button(label="Nueva")
+        self.btn_editar = Gtk.Button(label="Editar")
+        self.btn_eliminar = Gtk.Button(label="Eliminar")
+        self.btn_generar = Gtk.Button(label="Generar .conf")
+        self.btn_abrir_carpeta = Gtk.Button(label="Abrir carpeta")
+        self.btn_editar.set_sensitive(False)
+        self.btn_eliminar.set_sensitive(False)
+        self.btn_generar.set_sensitive(False)
+        self.btn_abrir_carpeta.set_sensitive(False)
+        btns_box.pack_start(self.btn_nueva, False, False, 0)
+        btns_box.pack_start(self.btn_editar, False, False, 0)
+        btns_box.pack_start(self.btn_eliminar, False, False, 0)
+        btns_box.pack_start(self.btn_abrir_carpeta, False, False, 0)
+        btns_box.pack_end(self.btn_generar, False, False, 0)
         crud_box.pack_start(btns_box, False, False, 0)
 
+        self.btn_nueva.connect("clicked", self._on_nueva_clicked)
+        self.btn_editar.connect("clicked", self._on_editar_clicked)
+        self.btn_eliminar.connect("clicked", self._on_eliminar_clicked)
+        self.btn_generar.connect("clicked", self._on_generar_clicked)
+        self.btn_abrir_carpeta.connect("clicked", self._on_abrir_carpeta_clicked)
+
         self.pack_start(crud_box, True, True, 0)
+
+    def _refresh_liststore(self):
+        self.liststore.clear()
+        for row in list_nginx_configs():
+            row = list(row)
+            while len(row) < 10:
+                if len(row) == 8:
+                    row.append(0)
+                elif len(row) == 9:
+                    row.append("")
+            self.liststore.append(row)
+
+    def _on_selection_changed(self, selection):
+        model, treeiter = selection.get_selected()
+        is_selected = treeiter is not None
+        self.btn_editar.set_sensitive(is_selected)
+        self.btn_eliminar.set_sensitive(is_selected)
+        self.btn_generar.set_sensitive(is_selected)
+        if is_selected:
+            server_names = model[treeiter][1]
+            main_name = [n.strip() for n in server_names.split(",") if n.strip()][0] if server_names else None
+            workdir = get_workdir()
+            nginx_dir = os.path.join(workdir, "http-configs", "nginx")
+            conf_dir = os.path.join(nginx_dir, main_name) if main_name else None
+            conf_path = os.path.join(conf_dir, f"{main_name}.conf") if main_name else None
+            self.btn_abrir_carpeta.set_sensitive(conf_path and os.path.isfile(conf_path))
+        else:
+            self.btn_abrir_carpeta.set_sensitive(False)
+
+    def _on_abrir_carpeta_clicked(self, *_):
+        selection = self.treeview.get_selection()
+        model, treeiter = selection.get_selected()
+        if treeiter:
+            server_names = model[treeiter][1]
+            main_name = [n.strip() for n in server_names.split(",") if n.strip()][0] if server_names else None
+            workdir = get_workdir()
+            nginx_dir = os.path.join(workdir, "http-configs", "nginx")
+            conf_dir = os.path.join(nginx_dir, main_name) if main_name else None
+            if conf_dir and os.path.isdir(conf_dir):
+                os.system(f'xdg-open "{conf_dir}"')
+            else:
+                self._show_notification("La carpeta no existe. Primero genere el archivo .conf.")
+
+    def _on_nueva_clicked(self, *_):
+        dialog = NginxConfigDialog(self.get_toplevel(), "Nueva configuración")
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            data = dialog.get_data()
+            create_nginx_config(*data)
+            self._refresh_liststore()
+        dialog.destroy()
+
+    def _on_editar_clicked(self, *_):
+        selection = self.treeview.get_selection()
+        model, treeiter = selection.get_selected()
+        if treeiter:
+            id_ = model[treeiter][0]
+            config = get_nginx_config(id_)
+            old_server_names = config[1]
+            old_main_name = [n.strip() for n in old_server_names.split(",") if n.strip()][0] if old_server_names else None
+            workdir = get_workdir()
+            nginx_dir = os.path.join(workdir, "http-configs", "nginx")
+            old_conf_dir = os.path.join(nginx_dir, old_main_name) if old_main_name else None
+            old_conf_path = os.path.join(old_conf_dir, f"{old_main_name}.conf") if old_main_name else None
+            file_exists = old_conf_path and os.path.isfile(old_conf_path)
+
+            dialog = NginxConfigDialog(self.get_toplevel(), "Editar configuración", config)
+            response = dialog.run()
+            if response == Gtk.ResponseType.OK:
+                data = dialog.get_data()
+                new_server_names = data[0]
+                new_main_name = [n.strip() for n in new_server_names.split(",") if n.strip()][0] if new_server_names else None
+                new_conf_dir = os.path.join(nginx_dir, new_main_name) if new_main_name else None
+                new_conf_path = os.path.join(new_conf_dir, f"{new_main_name}.conf") if new_main_name else None
+
+                if file_exists and old_main_name != new_main_name:
+                    dialog_conf = Gtk.MessageDialog(
+                        transient_for=self.get_toplevel(),
+                        flags=0,
+                        message_type=Gtk.MessageType.QUESTION,
+                        buttons=Gtk.ButtonsType.NONE,
+                        text=f"El archivo de configuración anterior existe:\n{old_conf_path}\n¿Qué desea hacer?"
+                    )
+                    btn_rename = dialog_conf.add_button("Renombrar", 1)
+                    btn_ignore = dialog_conf.add_button("Ignorar", 2)
+                    btn_delete = dialog_conf.add_button("Borrar", 3)
+                    dialog_conf.set_default_response(2)
+                    response_conf = dialog_conf.run()
+                    dialog_conf.destroy()
+                    if response_conf == 1:
+                        try:
+                            os.makedirs(new_conf_dir, exist_ok=True)
+                            conf_text = self._generate_nginx_conf(*data)
+                            if os.path.isfile(new_conf_path):
+                                os.remove(new_conf_path)
+                            os.rename(old_conf_path, new_conf_path)
+                            with open(new_conf_path, "w") as f:
+                                f.write(conf_text)
+                            self._show_notification(f"Archivo renombrado y actualizado:\n{new_conf_path}")
+                        except Exception as e:
+                            self._show_notification(f"Error al renombrar o actualizar:\n{e}")
+                    elif response_conf == 3:
+                        try:
+                            os.remove(old_conf_path)
+                            self._show_notification("Archivo .conf anterior eliminado.")
+                        except Exception as e:
+                            self._show_notification(f"Error al eliminar archivo:\n{e}")
+                    elif response_conf == 2:
+                        self._show_notification("Se creará un nuevo archivo .conf, el anterior no será modificado.")
+
+                update_nginx_config(id_, *data)
+                self._refresh_liststore()
+            dialog.destroy()
+
+    def _on_eliminar_clicked(self, *_):
+        selection = self.treeview.get_selection()
+        model, treeiter = selection.get_selected()
+        if treeiter:
+            id_ = model[treeiter][0]
+            config = get_nginx_config(id_)
+            dialog = Gtk.MessageDialog(
+                transient_for=self.get_toplevel(),
+                flags=0,
+                message_type=Gtk.MessageType.QUESTION,
+                buttons=Gtk.ButtonsType.YES_NO,
+                text="¿Está seguro que desea eliminar esta configuración?"
+            )
+            response = dialog.run()
+            dialog.destroy()
+            if response == Gtk.ResponseType.YES:
+                server_names = config[1]
+                main_name = [n.strip() for n in server_names.split(",") if n.strip()][0] if server_names else None
+                workdir = get_workdir()
+                nginx_dir = os.path.join(workdir, "http-configs", "nginx")
+                conf_dir = os.path.join(nginx_dir, main_name) if main_name else None
+                conf_path = os.path.join(conf_dir, f"{main_name}.conf") if main_name else None
+                file_exists = conf_path and os.path.isfile(conf_path)
+                if file_exists:
+                    dialog2 = Gtk.MessageDialog(
+                        transient_for=self.get_toplevel(),
+                        flags=0,
+                        message_type=Gtk.MessageType.QUESTION,
+                        buttons=Gtk.ButtonsType.YES_NO,
+                        text=f"También se encontró el archivo:\n{conf_path}\n¿Desea eliminarlo?"
+                    )
+                    response2 = dialog2.run()
+                    dialog2.destroy()
+                    if response2 == Gtk.ResponseType.YES:
+                        try:
+                            os.remove(conf_path)
+                        except Exception as e:
+                            self._show_notification(f"Error al eliminar archivo:\n{e}")
+                delete_nginx_config(id_)
+                self._refresh_liststore()
+                self._show_notification("Configuración eliminada correctamente.")
+
+    def _on_generar_clicked(self, *_):
+        selection = self.treeview.get_selection()
+        model, treeiter = selection.get_selected()
+        if treeiter:
+            id_ = model[treeiter][0]
+            config = get_nginx_config(id_)
+            if config:
+                (server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target) = (
+                    config[1], config[2], config[3], config[4], config[5], config[6], config[7], config[8], config[9]
+                )
+                conf_text = self._generate_nginx_conf(server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target)
+                main_name = [n.strip() for n in server_names.split(",") if n.strip()][0] if server_names else "nginx-website"
+                suggested_filename = f"{main_name}.conf"
+                preview_dialog = NginxConfPreviewDialog(self.get_toplevel(), conf_text, suggested_filename)
+                response = preview_dialog.run()
+                if response == Gtk.ResponseType.OK:
+                    save_option = preview_dialog.get_save_option()
+                    filename = preview_dialog.get_filename()
+                    if save_option == "workdir":
+                        workdir = get_workdir()
+                        nginx_dir = os.path.join(workdir, "http-configs", "nginx")
+                        conf_dir = os.path.join(nginx_dir, main_name)
+                        os.makedirs(conf_dir, exist_ok=True)
+                        filepath = os.path.join(conf_dir, filename)
+                    else:
+                        filepath = preview_dialog.get_custom_path()
+                        if not filepath:
+                            preview_dialog.destroy()
+                            return
+                    if os.path.isfile(filepath):
+                        dialog_overwrite = Gtk.MessageDialog(
+                            transient_for=self.get_toplevel(),
+                            flags=0,
+                            message_type=Gtk.MessageType.QUESTION,
+                            buttons=Gtk.ButtonsType.YES_NO,
+                            text=f"El archivo ya existe:\n{filepath}\n¿Desea sobreescribirlo?"
+                        )
+                        resp_overwrite = dialog_overwrite.run()
+                        dialog_overwrite.destroy()
+                        if resp_overwrite != Gtk.ResponseType.YES:
+                            preview_dialog.destroy()
+                            return
+                        if save_option == "workdir" and os.path.isdir(conf_dir):
+                            try:
+                                shutil.rmtree(conf_dir)
+                                os.makedirs(conf_dir, exist_ok=True)
+                            except Exception as e:
+                                self._show_notification(f"Error al borrar la carpeta anterior:\n{e}")
+                                preview_dialog.destroy()
+                                return
+                    try:
+                        with open(filepath, "w") as f:
+                            f.write(conf_text)
+                        self._show_notification(f"Archivo guardado:\n{filepath}")
+                    except Exception as e:
+                        self._show_notification(f"Error al guardar:\n{e}")
+                preview_dialog.destroy()
+
+    def _show_notification(self, message):
+        dialog = Gtk.MessageDialog(
+            transient_for=self.get_toplevel(),
+            flags=0,
+            message_type=Gtk.MessageType.INFO,
+            buttons=Gtk.ButtonsType.OK,
+            text=message
+        )
+        dialog.run()
+        dialog.destroy()
+
+    def _generate_nginx_conf(self, server_names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target):
+        def indent(text, spaces=4):
+            pad = " " * spaces
+            return "\n".join(pad + line if line.strip() else "" for line in text.splitlines())
+
+        names = [n.strip() for n in server_names.split(",") if n.strip()]
+        main_name = names[0] if names else ""
+        aliases = names[1:] if len(names) > 1 else []
+        blocks = []
+        certfile = ""
+        keyfile = ""
+        if ssl_preset == "certbot":
+            certfile = f"/etc/letsencrypt/live/{main_name}/fullchain.pem"
+            keyfile = f"/etc/letsencrypt/live/{main_name}/privkey.pem"
+        elif ssl_preset == "snakeoil":
+            certfile = "/etc/ssl/certs/ssl-cert-snakeoil.pem"
+            keyfile = "/etc/ssl/private/ssl-cert-snakeoil.key"
+        elif ssl_preset == "custom":
+            certfile, keyfile = (ssl_cert or "").split("::") if "::" in (ssl_cert or "") else ("", "")
+
+        def server_alias_line():
+            return " ".join(aliases) if aliases else ""
+
+        # HTTP block
+        if http_enabled:
+            if https_enabled and redirect_http:
+                blocks.append(
+                    f"server {{\n    listen 80;\n    server_name {main_name} {server_alias_line()};\n    return 301 https://$host$request_uri;\n}}\n"
+                )
+            else:
+                block = f"server {{\n    listen 80;\n    server_name {main_name} {server_alias_line()};\n"
+                if not is_proxy:
+                    block += f"    root {docroot};\n    index index.html index.htm;\n"
+                if is_proxy:
+                    block += f"    location / {{\n        proxy_pass http://{proxy_target};\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }}\n"
+                block += "    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n}"
+                blocks.append(block)
+        # HTTPS block
+        if https_enabled:
+            block = f"server {{\n    listen 443 ssl;\n    server_name {main_name} {server_alias_line()};\n    ssl_certificate {certfile};\n    ssl_certificate_key {keyfile};\n"
+            if not is_proxy:
+                block += f"    root {docroot};\n    index index.html index.htm;\n"
+            if is_proxy:
+                block += f"    location / {{\n        proxy_pass http://{proxy_target};\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }}\n"
+            block += "    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n}"
+            blocks.append(block)
+        return "\n\n".join(blocks)
+
+class NginxConfigDialog(Gtk.Dialog):
+    def __init__(self, parent, title, config=None):
+        super().__init__(title, parent, 0,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        )
+        self.set_default_size(400, 320)
+        box = self.get_content_area()
+        grid = Gtk.Grid(row_spacing=10, column_spacing=10, margin=10)
+        box.add(grid)
+
+        lbl_names = Gtk.Label(label="Dominios (separados por coma):")
+        lbl_names.set_halign(Gtk.Align.END)
+        self.entry_names = Gtk.Entry()
+        grid.attach(lbl_names, 0, 0, 1, 1)
+        grid.attach(self.entry_names, 1, 0, 2, 1)
+
+        lbl_http = Gtk.Label(label="Habilitar HTTP (80):")
+        lbl_http.set_halign(Gtk.Align.END)
+        self.check_http = Gtk.CheckButton()
+        grid.attach(lbl_http, 0, 1, 1, 1)
+        grid.attach(self.check_http, 1, 1, 2, 1)
+
+        lbl_https = Gtk.Label(label="Habilitar HTTPS (443):")
+        lbl_https.set_halign(Gtk.Align.END)
+        self.check_https = Gtk.CheckButton()
+        grid.attach(lbl_https, 0, 2, 1, 1)
+        grid.attach(self.check_https, 1, 2, 2, 1)
+
+        lbl_docroot = Gtk.Label(label="Path del sitio (root):")
+        lbl_docroot.set_halign(Gtk.Align.END)
+        self.entry_docroot = Gtk.Entry()
+        grid.attach(lbl_docroot, 0, 3, 1, 1)
+        grid.attach(self.entry_docroot, 1, 3, 2, 1)
+
+        lbl_ssl = Gtk.Label(label="Certificado SSL:")
+        lbl_ssl.set_halign(Gtk.Align.END)
+        self.combo_ssl = Gtk.ComboBoxText()
+        self.combo_ssl.append("certbot", "Certbot (Let's Encrypt)")
+        self.combo_ssl.append("snakeoil", "Snakeoil (por defecto)")
+        self.combo_ssl.append("custom", "Personalizado")
+        grid.attach(lbl_ssl, 0, 4, 1, 1)
+        grid.attach(self.combo_ssl, 1, 4, 2, 1)
+
+        lbl_ssl_custom = Gtk.Label(label="Ruta cert y key (custom):")
+        lbl_ssl_custom.set_halign(Gtk.Align.END)
+        self.entry_ssl_custom = Gtk.Entry()
+        self.entry_ssl_custom.set_placeholder_text("/ruta/cert.pem::/ruta/key.pem")
+        grid.attach(lbl_ssl_custom, 0, 5, 1, 1)
+        grid.attach(self.entry_ssl_custom, 1, 5, 2, 1)
+
+        self.check_redirect = Gtk.CheckButton(label="Redirigir HTTP a HTTPS")
+        grid.attach(self.check_redirect, 1, 6, 2, 1)
+
+        self.radio_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        self.radio_docroot = Gtk.RadioButton.new_with_label_from_widget(None, "Usar root")
+        self.radio_proxy = Gtk.RadioButton.new_with_label_from_widget(self.radio_docroot, "Usar Proxy Inverso")
+        self.radio_box.pack_start(self.radio_docroot, False, False, 0)
+        self.radio_box.pack_start(self.radio_proxy, False, False, 0)
+        grid.attach(self.radio_box, 1, 7, 2, 1)
+
+        lbl_proxy = Gtk.Label(label="Proxy destino (IP:PUERTO):")
+        lbl_proxy.set_halign(Gtk.Align.END)
+        self.entry_proxy = Gtk.Entry()
+        self.entry_proxy.set_placeholder_text("127.0.0.1:3000")
+        grid.attach(lbl_proxy, 0, 8, 1, 1)
+        grid.attach(self.entry_proxy, 1, 8, 2, 1)
+
+        def update_ssl_widgets():
+            https_active = self.check_https.get_active()
+            self.combo_ssl.set_sensitive(https_active)
+            self.check_redirect.set_sensitive(https_active)
+            is_custom = self.combo_ssl.get_active_id() == "custom" and https_active
+            self.entry_ssl_custom.set_sensitive(is_custom)
+            lbl_ssl_custom.set_sensitive(is_custom)
+
+        def on_https_toggled(btn):
+            update_ssl_widgets()
+        self.check_https.connect("toggled", on_https_toggled)
+
+        def on_ssl_combo_changed(combo):
+            update_ssl_widgets()
+        self.combo_ssl.connect("changed", on_ssl_combo_changed)
+
+        def on_proxy_toggled(btn):
+            is_proxy = self.radio_proxy.get_active()
+            self.entry_docroot.set_sensitive(not is_proxy)
+            lbl_docroot.set_sensitive(not is_proxy)
+            self.entry_proxy.set_sensitive(is_proxy)
+            lbl_proxy.set_sensitive(is_proxy)
+
+        self.radio_docroot.connect("toggled", on_proxy_toggled)
+        self.radio_proxy.connect("toggled", on_proxy_toggled)
+
+        if config:
+            self.entry_names.set_text(config[1])
+            self.check_http.set_active(bool(config[2]))
+            self.check_https.set_active(bool(config[3]))
+            self.entry_docroot.set_text(config[4])
+            self.combo_ssl.set_active_id(config[5] or "certbot")
+            self.entry_ssl_custom.set_text(config[6] or "")
+            self.check_redirect.set_active(bool(config[7]))
+            if len(config) > 8 and config[8]:
+                self.radio_proxy.set_active(True)
+            else:
+                self.radio_docroot.set_active(True)
+            if len(config) > 9:
+                self.entry_proxy.set_text(config[9] or "")
+            else:
+                self.entry_proxy.set_text("")
+        else:
+            self.check_http.set_active(True)
+            self.check_https.set_active(False)
+            self.entry_docroot.set_text("/var/www/html")
+            self.combo_ssl.set_active_id("certbot")
+            self.entry_ssl_custom.set_text("")
+            self.check_redirect.set_active(False)
+            self.radio_docroot.set_active(True)
+            self.entry_proxy.set_text("")
+
+        update_ssl_widgets()
+        on_proxy_toggled(None)
+        self.show_all()
+
+    def get_data(self):
+        names = self.entry_names.get_text().strip()
+        http_enabled = self.check_http.get_active()
+        https_enabled = self.check_https.get_active()
+        docroot = self.entry_docroot.get_text().strip()
+        ssl_preset = self.combo_ssl.get_active_id() or "certbot"
+        ssl_cert = self.entry_ssl_custom.get_text().strip() if ssl_preset == "custom" else ""
+        redirect_http = self.check_redirect.get_active()
+        is_proxy = int(self.radio_proxy.get_active())
+        proxy_target = self.entry_proxy.get_text().strip() if is_proxy else ""
+        return names, http_enabled, https_enabled, docroot, ssl_preset, ssl_cert, redirect_http, is_proxy, proxy_target
+
+class NginxConfPreviewDialog(Gtk.Dialog):
+    def __init__(self, parent, conf_text, suggested_filename="nginx-website.conf"):
+        super().__init__("Preview y Guardar .conf", parent, 0,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_SAVE, Gtk.ResponseType.OK)
+        )
+        self.set_default_size(500, 350)
+        box = self.get_content_area()
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, margin=10)
+        box.add(vbox)
+
+        label = Gtk.Label(label="Vista previa del archivo .conf:")
+        label.set_halign(Gtk.Align.START)
+        vbox.pack_start(label, False, False, 0)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self.textview = Gtk.TextView()
+        self.textview.set_editable(False)
+        self.textview.get_buffer().set_text(conf_text)
+        scrolled.add(self.textview)
+        scrolled.set_min_content_height(180)
+        vbox.pack_start(scrolled, True, True, 0)
+
+        self.save_option = "workdir"
+        self.filename_entry = Gtk.Entry()
+        self.filename_entry.set_text(suggested_filename)
+        self.custom_path = None
+
+        radio_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.radio_workdir = Gtk.RadioButton.new_with_label_from_widget(None, f"Guardar en http-configs/nginx/ dentro del directorio de trabajo ({get_workdir()})")
+        self.radio_custom = Gtk.RadioButton.new_with_label_from_widget(self.radio_workdir, "Elegir otro lugar...")
+        self.radio_workdir.set_active(True)
+        self.radio_workdir.connect("toggled", self._on_radio_toggled)
+        radio_box.pack_start(self.radio_workdir, False, False, 0)
+        radio_box.pack_start(self.radio_custom, False, False, 0)
+        vbox.pack_start(radio_box, False, False, 0)
+
+        filename_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        filename_box.pack_start(Gtk.Label(label="Nombre de archivo:"), False, False, 0)
+        filename_box.pack_start(self.filename_entry, True, True, 0)
+        vbox.pack_start(filename_box, False, False, 0)
+
+        self.choose_btn = Gtk.Button(label="Seleccionar carpeta…")
+        self.choose_btn.set_sensitive(False)
+        self.choose_btn.connect("clicked", self._on_choose_folder)
+        vbox.pack_start(self.choose_btn, False, False, 0)
+
+        self.selected_path_label = Gtk.Label()
+        self.selected_path_label.set_halign(Gtk.Align.START)
+        vbox.pack_start(self.selected_path_label, False, False, 0)
+
+        self.show_all()
+
+    def _on_radio_toggled(self, btn):
+        if self.radio_custom.get_active():
+            self.choose_btn.set_sensitive(True)
+            self.save_option = "custom"
+        else:
+            self.choose_btn.set_sensitive(False)
+            self.save_option = "workdir"
+
+    def _on_choose_folder(self, *_):
+        dialog = Gtk.FileChooserDialog(
+            title="Seleccionar carpeta",
+            action=Gtk.FileChooserAction.SELECT_FOLDER,
+            buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                     "Seleccionar", Gtk.ResponseType.OK)
+        )
+        if dialog.run() == Gtk.ResponseType.OK:
+            folder = dialog.get_filename()
+            self.custom_path = folder
+            self.selected_path_label.set_text(f"Carpeta seleccionada: {folder}")
+        dialog.destroy()
+
+    def get_save_option(self):
+        return self.save_option
+
+    def get_filename(self):
+        return self.filename_entry.get_text().strip() or "nginx-website.conf"
+
+    def get_custom_path(self):
+        if self.custom_path:
+            return os.path.join(self.custom_path, self.get_filename())
+        return None
