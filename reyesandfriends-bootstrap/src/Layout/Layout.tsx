@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const sidebarButtons = [
   { label: "Inicio", icon: "/icons/folder.svg", route: "/" },
   { label: "Servidores HTTP", icon: "/icons/network-server.svg", route: "/http-servers" },
-  { label: "Scripts SQL", icon: "/icons/sqlitebrowser.svg", route: "/sql-scripts" },
+  { label: "Bases de datos", icon: "/icons/sqlitebrowser.svg", route: "/sql-scripts" },
   { label: "Preferencias", icon: "/icons/preferences-desktop-icons.svg", route: "/settings" },
   { label: "Acerca de", icon: "/icons/help-about.svg", route: "/about" },
 ];
