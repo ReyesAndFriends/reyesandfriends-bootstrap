@@ -24,9 +24,20 @@ class MainWindow(Gtk.Window):
         max_width = monitor_w
         max_height = monitor_h
 
+        min_w, min_h = 640, 360
+
         self.set_default_size(max_width, max_height)
         self.set_resizable(True)
 
+        geometry = Gdk.Geometry()
+        geometry.min_width = min_w
+        geometry.min_height = min_h
+        geometry.max_width = max_width
+        geometry.max_height = max_height
+        self.set_geometry_hints(self, geometry,
+            Gdk.WindowHints.MIN_SIZE | Gdk.WindowHints.MAX_SIZE)
+
+        # Centrar la ventana por defecto
         self.set_position(Gtk.WindowPosition.CENTER)
 
         self._view_history = []
