@@ -97,7 +97,7 @@ class NginxView(Gtk.Box):
         self.btn_editar = Gtk.Button(label="Editar")
         self.btn_eliminar = Gtk.Button(label="Eliminar")
         self.btn_generar = Gtk.Button(label="Generar .conf")
-        self.btn_abrir_carpeta = Gtk.Button(label="Directorio")
+        self.btn_abrir_carpeta = Gtk.Button(label="Directorio del .conf")
         self.btn_editar.set_sensitive(False)
         self.btn_eliminar.set_sensitive(False)
         self.btn_generar.set_sensitive(False)
