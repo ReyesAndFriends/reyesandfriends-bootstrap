@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import * as db from './db'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -68,7 +69,10 @@ app.on('activate', () => {
   }
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createWindow()
+  db.getWorkdir()
+})
 
 // --- IPC handler para seleccionar carpeta ---
 ipcMain.handle('select-workdir', async () => {
