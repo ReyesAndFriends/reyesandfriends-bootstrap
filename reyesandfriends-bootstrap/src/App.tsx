@@ -1,11 +1,15 @@
 import './App.css'
+import Layout from './Layout/Layout'
+import { BrowserRouter } from 'react-router-dom'
+import AppRoutes from './router/router'
 
 function App() {
-
   return (
-    <>
-      <div><h1>Reyes&Friends Bootstrap</h1></div>
-    </>
+    <BrowserRouter>
+      <Layout>
+        <AppRoutes />
+      </Layout>
+    </BrowserRouter>
   )
 }
 
