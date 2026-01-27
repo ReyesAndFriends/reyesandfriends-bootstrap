@@ -376,6 +376,7 @@ class MysqlConfigDialog(Gtk.Dialog):
             else:
                 self.entry_host.set_sensitive(True)
                 self.entry_host.set_text("")
+            self._validate_fields()
         self.combo_host.connect("changed", on_host_combo_changed)
 
         lbl_priv = Gtk.Label(label="Privilegios:")
@@ -400,6 +401,7 @@ class MysqlConfigDialog(Gtk.Dialog):
             if preset and preset != "personalizado":
                 privs = get_privileges_for_preset(preset)
                 self.entry_priv.set_text(privs)
+            self._validate_fields()
         self.combo_preset.connect("changed", on_preset_changed)
 
         # Inicialización de valores
@@ -435,10 +437,38 @@ class MysqlConfigDialog(Gtk.Dialog):
             self.entry_host.set_sensitive(False)
             self.combo_preset.set_active(0)
 
+        # --- Validación de campos para habilitar/deshabilitar el botón OK ---
+        self.ok_button = self.get_widget_for_response(Gtk.ResponseType.OK)
+        self.ok_button.set_sensitive(False)
+        # Conectar señales de cambio en los campos relevantes
+        self.entry_db.connect("changed", lambda *_: self._validate_fields())
+        self.entry_user.connect("changed", lambda *_: self._validate_fields())
+        self.entry_pass.connect("changed", lambda *_: self._validate_fields())
+        self.entry_priv.connect("changed", lambda *_: self._validate_fields())
+        self.entry_host.connect("changed", lambda *_: self._validate_fields())
+        # Validar al mostrar el diálogo
+        self._validate_fields()
+
         self.show_all()
+
+    def _validate_fields(self):
+        db = self.entry_db.get_text().strip()
+        user = self.entry_user.get_text().strip()
+        passwd = self.entry_pass.get_text().strip()
+        priv = self.entry_priv.get_text().strip()
+        host_idx = self.combo_host.get_active()
+        if host_idx == 2:
+            host = self.entry_host.get_text().strip()
+        else:
+            host = "localhost" if host_idx == 0 else "%"
+        # Todos los campos deben estar llenos
+        all_filled = all([db, user, passwd, priv, host])
+        if hasattr(self, 'ok_button') and self.ok_button:
+            self.ok_button.set_sensitive(all_filled)
 
     def _on_gen_pass(self, *_):
         self.entry_pass.set_text(generate_password())
+        self._validate_fields()
 
     def get_data(self):
         db_name = self.entry_db.get_text().strip()
