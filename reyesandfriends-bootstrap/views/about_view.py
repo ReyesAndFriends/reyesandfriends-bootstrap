@@ -7,11 +7,22 @@ from datetime import datetime
 
 class AboutView(Gtk.Box):
     def __init__(self):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=36)
-        self.set_margin_top(56)
-        self.set_margin_bottom(32)
-        self.set_margin_start(32)
-        self.set_margin_end(32)
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        self.set_border_width(24)
+
+        # Título
+        title = Gtk.Label()
+        title.set_markup("<span size='xx-large' weight='bold'>Acerca de</span>")
+        title.set_justify(Gtk.Justification.CENTER)
+        title.set_halign(Gtk.Align.CENTER)
+        self.pack_start(title, False, False, 0)
+
+        # Descripción
+        desc = Gtk.Label(label="Información sobre Reyes&Friends Bootstrap.")
+        desc.set_justify(Gtk.Justification.CENTER)
+        desc.set_halign(Gtk.Align.CENTER)
+        desc.set_margin_bottom(24)
+        self.pack_start(desc, False, False, 0)
 
         # ===== Header =====
         header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
@@ -27,7 +38,6 @@ class AboutView(Gtk.Box):
         pixbuf = pixbuf.scale_simple(scale_size, scale_size, GdkPixbuf.InterpType.BILINEAR)
         logo = Gtk.Image.new_from_pixbuf(pixbuf)
 
-        # Encapsular el logo en un EventBox (sin CSS, solo tamaño)
         logo_box = Gtk.EventBox()
         logo_box.set_size_request(display_size, display_size)
         logo_box.add(logo)
@@ -57,6 +67,9 @@ class AboutView(Gtk.Box):
         card = Gtk.Frame()
         card.set_margin_top(24)
         card.set_shadow_type(Gtk.ShadowType.IN)
+        card.set_halign(Gtk.Align.CENTER)
+        card.set_valign(Gtk.Align.CENTER)
+        card.set_size_request(520, -1)
 
         card_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
@@ -140,8 +153,22 @@ class AboutView(Gtk.Box):
         self.pack_end(footer, False, False, 0)
 
     def create_monologue_widget(self):
-        """Crea el widget del monólogo solo con GTK, sin CSS."""
+
+        container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        container.set_halign(Gtk.Align.CENTER)
+        container.set_valign(Gtk.Align.CENTER)
+        container.set_margin_top(8)
+        container.set_margin_bottom(8)
+        container.set_margin_start(0)
+        container.set_margin_end(0)
+        container.set_size_request(480, -1)
+
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        box.set_margin_top(8)
+        box.set_margin_bottom(8)
+        box.set_margin_start(8)
+        box.set_margin_end(8)
+
         label = Gtk.Label()
         label.set_markup(
             "<span size='x-large' weight='bold'>Querido usuario final,</span>\n\n"
@@ -160,10 +187,12 @@ class AboutView(Gtk.Box):
         label.set_justify(Gtk.Justification.CENTER)
         label.set_margin_top(12)
         label.set_margin_bottom(12)
-        label.set_margin_start(24)
-        label.set_margin_end(24)
+        label.set_margin_start(12)
+        label.set_margin_end(12)
         box.pack_start(label, False, False, 0)
-        return box
+
+        container.pack_start(box, True, True, 0)
+        return container
 
     def _info_row(self, key, value):
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)

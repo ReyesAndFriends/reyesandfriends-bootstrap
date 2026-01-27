@@ -9,6 +9,20 @@ class SettingsView(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         self.set_border_width(24)
 
+        # Título
+        title = Gtk.Label()
+        title.set_markup("<span size='xx-large' weight='bold'>Configuración</span>")
+        title.set_justify(Gtk.Justification.CENTER)
+        title.set_halign(Gtk.Align.CENTER)
+        self.pack_start(title, False, False, 0)
+
+        # Descripción
+        desc = Gtk.Label(label="Gestiona el directorio de trabajo y otras opciones de la aplicación.")
+        desc.set_justify(Gtk.Justification.CENTER)
+        desc.set_halign(Gtk.Align.CENTER)
+        desc.set_margin_bottom(24)
+        self.pack_start(desc, False, False, 0)
+
         label = Gtk.Label(label="Directorio de trabajo actual:")
         label.set_halign(Gtk.Align.START)
         self.pack_start(label, False, False, 0)
