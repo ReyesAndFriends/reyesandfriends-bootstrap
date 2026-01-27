@@ -3,6 +3,8 @@ from gi.repository import Gtk, Gdk
 from datetime import date
 import os
 from gi.repository import GdkPixbuf
+import getpass
+import pwd  # Solo para Linux/Unix
 
 class HomeView(Gtk.Box):
 
@@ -68,8 +70,11 @@ class HomeView(Gtk.Box):
         )
 
         # Título
+        username = getpass.getuser()
+        realname = pwd.getpwnam(username).pw_gecos.split(',')[0] or username
+
         title = Gtk.Label()
-        title.set_markup("<big><b>Te damos la bienvenida</b></big>")
+        title.set_markup(f"<big><b>Te damos la bienvenida, {realname}!</b></big>")
         title.set_justify(Gtk.Justification.CENTER)
         title.set_margin_top(10)
         title.set_margin_bottom(10)
@@ -127,10 +132,3 @@ class HomeView(Gtk.Box):
         btns_box.pack_start(btn_sql, False, False, 0)
 
         self.pack_start(btns_box, False, False, 0)
-
-        current_year = date.today().year
-
-        footer = Gtk.Label(label=f"Creado por Reyes&Friends · {current_year}")
-        footer.set_margin_top(40)
-        footer.set_justify(Gtk.Justification.CENTER)
-        self.pack_end(footer, False, False, 0)

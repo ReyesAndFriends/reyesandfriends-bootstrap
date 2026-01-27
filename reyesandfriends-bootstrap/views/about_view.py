@@ -3,6 +3,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 import os
 from gi.repository import GdkPixbuf
+from datetime import datetime
 
 class AboutView(Gtk.Box):
     def __init__(self):
@@ -12,11 +13,8 @@ class AboutView(Gtk.Box):
         self.set_margin_start(32)
         self.set_margin_end(32)
 
-        self._load_css()
-
         # ===== Header =====
         header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
-        header.get_style_context().add_class("about-header")
         header.set_margin_top(24) 
 
         icon_path = os.path.join(
@@ -29,11 +27,10 @@ class AboutView(Gtk.Box):
         pixbuf = pixbuf.scale_simple(scale_size, scale_size, GdkPixbuf.InterpType.BILINEAR)
         logo = Gtk.Image.new_from_pixbuf(pixbuf)
 
-        # Encapsular el logo en un EventBox con fondo blanco y borde redondeado
+        # Encapsular el logo en un EventBox (sin CSS, solo tamaño)
         logo_box = Gtk.EventBox()
         logo_box.set_size_request(display_size, display_size)
         logo_box.add(logo)
-        logo_box.get_style_context().add_class("logo-encapsulated")
         logo_box.set_valign(Gtk.Align.CENTER)
 
         title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
@@ -45,7 +42,8 @@ class AboutView(Gtk.Box):
 
         subtitle = Gtk.Label(label="Un gestor de utilidades para desarrolladores y administradores de sistemas para una puesta a producción rápida.")
         subtitle.set_xalign(0)
-        subtitle.get_style_context().add_class("subtitle")
+        subtitle.set_margin_top(4)
+        subtitle.set_margin_bottom(4)
 
         title_box.pack_start(title, False, False, 0)
         title_box.pack_start(subtitle, False, False, 0)
@@ -57,49 +55,32 @@ class AboutView(Gtk.Box):
 
         # ===== Card principal =====
         card = Gtk.Frame()
-        card.get_style_context().add_class("card")
         card.set_margin_top(24)
+        card.set_shadow_type(Gtk.ShadowType.IN)
 
         card_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
-            spacing=12,
-            margin=16
+            spacing=12
         )
+        card_box.set_margin_top(16)
+        card_box.set_margin_bottom(16)
+        card_box.set_margin_start(16)
+        card_box.set_margin_end(16)
 
-        desc = Gtk.Label()
-        desc.set_markup(
-            "<span size='x-large' weight='bold'>Querido usuario final,</span>\n\n"
-            "<i>"
-            "En el mundo del desarrollo y la administración de sistemas, cada herramienta es una extensión de nuestra creatividad y pasión.\n"
-            "<b>Reyes&amp;Friends Bootstrap</b> surge como un puente entre la idea y la acción, entre el deseo de automatizar y la necesidad de simplificar.\n"
-            "No es solo un gestor de utilidades, sino el reflejo de incontables horas enfrentando desafíos, aprendiendo de errores y celebrando pequeños triunfos.\n\n"
-            "Este proyecto es un homenaje a quienes creen que la tecnología puede ser cercana, útil y elegante.\n"
-            "A quienes disfrutan compartir conocimiento y construir soluciones que faciliten la vida de otros.\n"
-            "<span foreground='#1565c0'><b>Gracias por ser parte de esta comunidad</b></span>, por inspirar y por confiar en que juntos podemos hacer del mundo digital un lugar más amigable y eficiente."
-            "</i>"
-        )
-        desc.set_xalign(0.5)
-        desc.set_halign(Gtk.Align.CENTER)
-        desc.set_line_wrap(True)
-        desc.set_justify(Gtk.Justification.CENTER)
-        desc.set_margin_top(12)
-        desc.set_margin_bottom(12)
-        desc.set_margin_start(24)
-        desc.set_margin_end(24)
-        desc.get_style_context().add_class("credit-card")
+        # Monólogo
+        monologue = self.create_monologue_widget()
+        card_box.pack_start(monologue, False, False, 0)
 
-        card_box.pack_start(desc, False, False, 0)
         card_box.pack_start(Gtk.Separator(), False, False, 8)
 
         card_box.pack_start(self._info_row("Versión", "1.0.0"), False, False, 0)
-        card_box.pack_start(self._info_row("Autor", "Reyes&Friends"), False, False, 0)
+        card_box.pack_start(self._info_row("Autor", "Reyes&Friends / AstronautMarkusDev"), False, False, 0)
 
         web = Gtk.LinkButton(
             uri="https://www.reyesandfriends.cl",
             label="www.reyesandfriends.cl"
         )
         web.set_halign(Gtk.Align.CENTER)
-        web.get_style_context().add_class("about-link")
         card_box.pack_start(web, False, False, 0)
 
         card.add(card_box)
@@ -151,16 +132,45 @@ class AboutView(Gtk.Box):
 
         self.pack_start(tech_box, False, False, 0)
 
-        footer = Gtk.Label(label="© 2026 Reyes&Friends")
-        footer.get_style_context().add_class("footer")
+        current_year = datetime.now().year
+
+        footer = Gtk.Label(label=f"© {current_year} Reyes&Friends")
+        footer.set_halign(Gtk.Align.CENTER)
+        footer.set_margin_top(20)
         self.pack_end(footer, False, False, 0)
+
+    def create_monologue_widget(self):
+        """Crea el widget del monólogo solo con GTK, sin CSS."""
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        label = Gtk.Label()
+        label.set_markup(
+            "<span size='x-large' weight='bold'>Querido usuario final,</span>\n\n"
+            "<i>"
+            "En el mundo del desarrollo y la administración de sistemas, cada herramienta es una extensión de nuestra creatividad y pasión.\n"
+            "<b>Reyes&amp;Friends Bootstrap</b> surge como un puente entre la idea y la acción, entre el deseo de automatizar y la necesidad de simplificar.\n"
+            "No es solo un gestor de utilidades, sino el reflejo de incontables horas enfrentando desafíos, aprendiendo de errores y celebrando pequeños triunfos.\n\n"
+            "Este proyecto es un homenaje a quienes creen que la tecnología puede ser cercana, útil y elegante.\n"
+            "A quienes disfrutan compartir conocimiento y construir soluciones que faciliten la vida de otros.\n"
+            "<span foreground='#1565c0'><b>Gracias por ser parte de esta comunidad</b></span>, por inspirar y por confiar en que juntos podemos hacer del mundo digital un lugar más amigable y eficiente."
+            "</i>"
+        )
+        label.set_xalign(0.5)
+        label.set_halign(Gtk.Align.CENTER)
+        label.set_line_wrap(True)
+        label.set_justify(Gtk.Justification.CENTER)
+        label.set_margin_top(12)
+        label.set_margin_bottom(12)
+        label.set_margin_start(24)
+        label.set_margin_end(24)
+        box.pack_start(label, False, False, 0)
+        return box
 
     def _info_row(self, key, value):
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
 
         key_label = Gtk.Label(label=f"{key}:")
         key_label.set_xalign(0)
-        key_label.get_style_context().add_class("key")
+        key_label.set_margin_end(4)
 
         value_label = Gtk.Label(label=value)
         value_label.set_xalign(0)
@@ -169,66 +179,6 @@ class AboutView(Gtk.Box):
         box.pack_start(value_label, True, True, 0)
 
         return box
-
-    def _load_css(self):
-        css = b"""
-        .about-header {
-            padding-bottom: 12px;
-        }
-
-        .subtitle {
-            color: #777;
-        }
-
-        .card {
-            background: #ffffff;
-            border-radius: 12px;
-            border: 1px solid #ddd;
-        }
-
-        .card * {
-            color: #000;
-        }
-
-        .about-link {
-            color: #1565c0;
-            font-weight: bold;
-        }
-        .about-link:hover {
-            text-decoration: underline;
-        }
-
-        .key {
-            font-weight: bold;
-        }
-
-        .footer {
-            color: #999;
-            margin-top: 20px;
-        }
-
-        .credit-card {
-            border-radius: 10px;
-            padding: 18px;
-            margin-left: 0px;
-            margin-right: 0px;
-        }
-        .logo-encapsulated {
-            background: #fff;
-            border-radius: 24px;
-            border: 1px solid #eee;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            padding: 0px;
-        }
-        """
-
-        provider = Gtk.CssProvider()
-        provider.load_from_data(css)
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(),
-            provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
 
     def _open_url(self, button, url):
         import webbrowser
