@@ -55,8 +55,8 @@ function Home() {
               style={{ width: 40, height: 40, marginRight: 20 }}
             />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 'bold', fontSize: 18 }}>Scripts para servidores web</div>
-              <div style={{ color: '#555', fontSize: 14 }}>Automatiza tareas comunes en servidores web.</div>
+              <div style={{ fontWeight: 'bold', fontSize: 18 }}>Servidores HTTP</div>
+              <div style={{ color: '#555', fontSize: 14 }}>Genera configuraciones para servidores HTTP como Apache o Nginx.</div>
             </div>
           </Link>
 
