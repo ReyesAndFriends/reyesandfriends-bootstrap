@@ -1,7 +1,30 @@
 import sqlite3
 import secrets
 import string
-from config import DB_PATH
+from config import DB_PATH, CONFIG_DIR
+from cryptography.fernet import Fernet
+import os
+
+FERNET_KEY_PATH = os.path.join(CONFIG_DIR, "fernet.key")
+
+def get_fernet():
+    if not os.path.exists(FERNET_KEY_PATH):
+        os.makedirs(CONFIG_DIR, exist_ok=True)
+        key = Fernet.generate_key()
+        with open(FERNET_KEY_PATH, "wb") as f:
+            f.write(key)
+    else:
+        with open(FERNET_KEY_PATH, "rb") as f:
+            key = f.read()
+    return Fernet(key)
+
+def encrypt_password(password):
+    f = get_fernet()
+    return f.encrypt(password.encode()).decode()
+
+def decrypt_password(token):
+    f = get_fernet()
+    return f.decrypt(token.encode()).decode()
 
 def ensure_mysql_db():
     conn = sqlite3.connect(DB_PATH)
@@ -41,11 +64,12 @@ def generate_password(length=20):
 
 def create_mysql_database(db_name, user_name, user_password, privileges, host='localhost', preset='', charset='utf8mb4'):
     ensure_mysql_db()
+    enc_pass = encrypt_password(user_password)
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(
         "INSERT INTO mysql_databases (db_name, user_name, user_password, privileges, host, preset, charset) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (db_name, user_name, user_password, privileges, host, preset, charset)
+        (db_name, user_name, enc_pass, privileges, host, preset, charset)
     )
     conn.commit()
     conn.close()
@@ -57,15 +81,22 @@ def list_mysql_databases():
     c.execute("SELECT id, db_name, user_name, user_password, privileges, host, preset, charset FROM mysql_databases")
     rows = c.fetchall()
     conn.close()
-    return rows
+
+    masked = []
+    for row in rows:
+        row = list(row)
+        row[3] = "********"  
+        masked.append(tuple(row))
+    return masked
 
 def update_mysql_database(id_, db_name, user_name, user_password, privileges, host='localhost', preset='', charset='utf8mb4'):
     ensure_mysql_db()
+    enc_pass = encrypt_password(user_password)
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(
         "UPDATE mysql_databases SET db_name=?, user_name=?, user_password=?, privileges=?, host=?, preset=?, charset=? WHERE id=?",
-        (db_name, user_name, user_password, privileges, host, preset, charset, id_)
+        (db_name, user_name, enc_pass, privileges, host, preset, charset, id_)
     )
     conn.commit()
     conn.close()
@@ -85,6 +116,14 @@ def get_mysql_database(id_):
     c.execute("SELECT id, db_name, user_name, user_password, privileges, host, preset, charset FROM mysql_databases WHERE id=?", (id_,))
     row = c.fetchone()
     conn.close()
+    if row:
+        row = list(row)
+        # Descifra la password para mostrarla en el diálogo de edición
+        try:
+            row[3] = decrypt_password(row[3])
+        except Exception:
+            row[3] = ""
+        return tuple(row)
     return row
 
 # Presets de privilegios

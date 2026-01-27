@@ -275,8 +275,15 @@ class MysqlView(Gtk.Box):
         selection = self.treeview.get_selection()
         model, treeiter = selection.get_selected()
         if treeiter:
-            row = self.liststore[treeiter]
-            db_name, user_name, user_password, privileges, host, charset = row[1], row[2], row[3], row[4], row[5], row[7]
+            id_ = model[treeiter][0]
+            config = get_mysql_database(id_)
+            # config: (id, db_name, user_name, user_password, privileges, host, preset, charset)
+            db_name = config[1]
+            user_name = config[2]
+            user_password = config[3]  # desencriptada
+            privileges = config[4]
+            host = config[5]
+            charset = config[7]
             sql = generate_mysql_sql(db_name, user_name, user_password, privileges, host, charset)
             suggested_filename = f"{db_name}.sql"
             preview_dialog = MysqlSQLPreviewDialog(self.get_toplevel(), sql, suggested_filename)
