@@ -225,18 +225,43 @@ class MysqlView(Gtk.Box):
         model, treeiter = selection.get_selected()
         if treeiter:
             id_ = model[treeiter][0]
+            config = get_mysql_database(id_)
+            db_name = config[1]
+            workdir = get_workdir()
+            sql_dir = os.path.join(workdir, "sql_scripts", "mysql", db_name)
+            sql_file = f"{db_name}.sql"
+            sql_path = os.path.join(sql_dir, sql_file)
+            file_exists = os.path.isfile(sql_path)
+
             dialog = Gtk.MessageDialog(
                 transient_for=self.get_toplevel(),
                 flags=0,
                 message_type=Gtk.MessageType.QUESTION,
                 buttons=Gtk.ButtonsType.YES_NO,
-                text="¿Está seguro que desea eliminar esta base de datos?"
+                text="¿Está seguro que desea eliminar este registro de base de datos?"
             )
             response = dialog.run()
             dialog.destroy()
             if response == Gtk.ResponseType.YES:
+                # Preguntar si también eliminar archivos .sql si existen
+                if file_exists:
+                    dialog2 = Gtk.MessageDialog(
+                        transient_for=self.get_toplevel(),
+                        flags=0,
+                        message_type=Gtk.MessageType.QUESTION,
+                        buttons=Gtk.ButtonsType.YES_NO,
+                        text=f"También se encontró el archivo:\n{sql_path}\n¿Desea eliminarlo?"
+                    )
+                    response2 = dialog2.run()
+                    dialog2.destroy()
+                    if response2 == Gtk.ResponseType.YES:
+                        try:
+                            os.remove(sql_path)
+                        except Exception as e:
+                            self._show_notification(f"Error al eliminar archivo:\n{e}")
                 delete_mysql_database(id_)
                 self._refresh_liststore()
+                self._show_notification("Registro eliminado correctamente.")
 
     def _on_generar_clicked(self, *_):
         selection = self.treeview.get_selection()
