@@ -25,7 +25,18 @@ function useApacheServerUtils() {
 
     // HTTP
     if (config.http) {
-      conf += `<VirtualHost *:80>
+      if (config.redirect && config.https) {
+        conf += `<VirtualHost *:80>
+  ServerName ${serverName}
+  ${serverAlias ? `ServerAlias ${serverAlias}` : ""}
+  Redirect permanent / https://${serverName}/
+  ErrorLog \${APACHE_LOG_DIR}/${serverName}_error.log
+  CustomLog \${APACHE_LOG_DIR}/${serverName}_access.log combined
+</VirtualHost>
+
+`;
+      } else {
+        conf += `<VirtualHost *:80>
   ServerName ${serverName}
   ${serverAlias ? `ServerAlias ${serverAlias}` : ""}
   ${proxy
@@ -41,12 +52,12 @@ function useApacheServerUtils() {
     Require all granted
   </Directory>
   `}
-  ${config.redirect && config.https ? `Redirect permanent / https://${serverName}/` : ""}
   ErrorLog \${APACHE_LOG_DIR}/${serverName}_error.log
   CustomLog \${APACHE_LOG_DIR}/${serverName}_access.log combined
 </VirtualHost>
 
 `;
+      }
     }
 
     // HTTPS
