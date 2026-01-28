@@ -52,6 +52,34 @@ function ApacheConfigModal({
     setError(null);
   }, [open, initialData]);
 
+  // Limpiar campos dependientes cuando se deshabilitan
+  useEffect(() => {
+    // Si se desactiva https, limpiar redirect y certificados custom
+    if (!https) {
+      setRedirect(false);
+      if (ssl !== "certbot") setSsl("certbot");
+      setSslCustomCert("");
+      setSslCustomKey("");
+    }
+    // Si se desactiva proxy, limpiar proxyTarget
+    if (!isProxy) {
+      setProxyTarget("");
+    }
+    // Si se desactiva custom SSL, limpiar campos custom
+    if (ssl !== "custom") {
+      setSslCustomCert("");
+      setSslCustomKey("");
+    }
+    // Si se activa proxy, limpiar path
+    if (isProxy) {
+      setPath("");
+    }
+    // Si se desactiva proxy, restaurar path si está vacío
+    if (!isProxy && !path) {
+      setPath("/var/www/html");
+    }
+  }, [https, ssl, isProxy]);
+
   // Validaciones
   useEffect(() => {
     // Validar dominios: al menos uno no vacío y con formato dominio.tld
