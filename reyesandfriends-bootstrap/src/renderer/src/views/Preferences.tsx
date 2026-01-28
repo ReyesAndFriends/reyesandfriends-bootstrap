@@ -3,15 +3,13 @@ import { AnimatePresence, motion } from "framer-motion";
 
 declare global {
   interface Window {
-    settingsAPI?: {
       getWorkdir: () => Promise<string>;
       setWorkdir: (path: string) => Promise<void>;
       selectWorkdir: () => Promise<string | null>;
       getDefaultWorkdir: () => Promise<string>;
-    };
+    }
   }
-}
-
+  
 const Preferences: React.FC = () => {
   const [workdir, setWorkdir] = useState("");
   const [defaultWorkdir, setDefaultWorkdir] = useState("");
