@@ -62,7 +62,7 @@ const Preferences: React.FC = () => {
   }
 
   return (
-    <div className="callout secondary" style={{ maxWidth: 600, margin: "2rem auto" }}>
+    <div className="callout secondary" style={{ maxWidth: 900, margin: "2rem auto" }}>
       <h4>Preferencias</h4>
       <div className="callout primary" style={{ marginBottom: 16 }}>
         <label>
@@ -74,7 +74,7 @@ const Preferences: React.FC = () => {
             type="text"
             value={workdir}
             disabled
-            style={{ minWidth: 300, background: "#f3f3f3" }}
+            style={{ minWidth: 500, width: "100%", background: "#f3f3f3" }}
           />
           <div className="input-group-button">
             <button
@@ -95,7 +95,7 @@ const Preferences: React.FC = () => {
         </button>
       </div>
       <div style={{ marginTop: 16, fontSize: 12, color: "#888" }}>
-        Valor original: <span style={{ fontFamily: "monospace" }}>{defaultWorkdir}</span>
+        Por defecto se utilizará <span style={{ fontFamily: "monospace" }}>{defaultWorkdir}</span>
       </div>
       {error && (
         <div className="callout alert" style={{ marginTop: 16 }}>
