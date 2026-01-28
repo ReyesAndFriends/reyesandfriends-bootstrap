@@ -10,6 +10,8 @@ import About from '../views/About'
 import ApacheView from '@renderer/views/servers/apache/ApacheView'
 import NginxView from '@renderer/views/servers/nginx/NginxView'
 
+import MySQLView from '@renderer/views/databases/mysql/MySQLView'
+
 const pageVariants = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
@@ -95,6 +97,22 @@ const AppRoutes = () => {
             </motion.div>
           }
         />
+
+        <Route
+          path="/databases/mysql"
+          element={
+            <motion.div
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: "tween", duration: 0.2 }}
+            >
+              <MySQLView />
+            </motion.div>
+          }
+        />
+
         <Route
           path="/preferences"
           element={
