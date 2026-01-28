@@ -13,7 +13,6 @@ declare global {
 
 const Preferences: React.FC = () => {
   const [workdir, setWorkdir] = useState("");
-  const [input, setInput] = useState("");
   const [defaultWorkdir, setDefaultWorkdir] = useState("");
   const [selecting, setSelecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,22 +21,11 @@ const Preferences: React.FC = () => {
     if (!window.settingsAPI) return;
     window.settingsAPI.getWorkdir().then((dir) => {
       setWorkdir(dir);
-      setInput(dir);
     });
     window.settingsAPI.getDefaultWorkdir().then((dir) => {
       setDefaultWorkdir(dir);
     });
   }, []);
-
-  const handleSave = async () => {
-    setError(null);
-    try {
-      await window.settingsAPI?.setWorkdir(input);
-      setWorkdir(input);
-    } catch (e) {
-      setError("No se pudo guardar el directorio.");
-    }
-  };
 
   const handleSelectFolder = async () => {
     setSelecting(true);
@@ -45,7 +33,6 @@ const Preferences: React.FC = () => {
     try {
       const selected = await window.settingsAPI?.selectWorkdir();
       if (selected) {
-        setInput(selected);
         await window.settingsAPI?.setWorkdir(selected);
         setWorkdir(selected);
       }
@@ -58,7 +45,6 @@ const Preferences: React.FC = () => {
   const handleRestore = async () => {
     setError(null);
     try {
-      setInput(defaultWorkdir);
       await window.settingsAPI?.setWorkdir(defaultWorkdir);
       setWorkdir(defaultWorkdir);
     } catch (e) {
@@ -82,46 +68,32 @@ const Preferences: React.FC = () => {
         <label>
           <b>Directorio de trabajo actual:</b>
         </label>
-        <div style={{ fontFamily: "monospace", wordBreak: "break-all" }}>{workdir}</div>
-      </div>
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          handleSave();
-        }}
-      >
-        <label>
-          Cambiar directorio de trabajo:
-          <div className="input-group">
-            <input
-              className="input-group-field"
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              style={{ minWidth: 300 }}
-            />
-            <div className="input-group-button">
-              <button
-                type="button"
-                className="button primary"
-                onClick={handleSelectFolder}
-                disabled={selecting}
-                title="Seleccionar carpeta..."
-              >
-                <i className="fi-folder" style={{ marginRight: 4 }} /> {selecting ? "Abriendo..." : "Seleccionar"}
-              </button>
-            </div>
+        <div className="input-group">
+          <input
+            className="input-group-field"
+            type="text"
+            value={workdir}
+            disabled
+            style={{ minWidth: 300, background: "#f3f3f3" }}
+          />
+          <div className="input-group-button">
+            <button
+              type="button"
+              className="button primary"
+              onClick={handleSelectFolder}
+              disabled={selecting}
+              title="Seleccionar carpeta..."
+            >
+              <i className="fi-folder" style={{ marginRight: 4 }} /> {selecting ? "Abriendo..." : "Seleccionar carpeta"}
+            </button>
           </div>
-        </label>
-        <div style={{ marginTop: 12 }}>
-          <button type="submit" className="button success" style={{ marginRight: 8 }}>
-            Guardar
-          </button>
-          <button type="button" className="button warning" onClick={handleRestore}>
-            Restaurar original
-          </button>
         </div>
-      </form>
+      </div>
+      <div style={{ marginTop: 12 }}>
+        <button type="button" className="button warning" onClick={handleRestore}>
+          Restaurar original
+        </button>
+      </div>
       <div style={{ marginTop: 16, fontSize: 12, color: "#888" }}>
         Valor original: <span style={{ fontFamily: "monospace" }}>{defaultWorkdir}</span>
       </div>

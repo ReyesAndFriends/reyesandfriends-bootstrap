@@ -1,29 +1,8 @@
-import { contextBridge, ipcRenderer } from 'electron';
-import { electronAPI } from '@electron-toolkit/preload';
+import { contextBridge, ipcRenderer } from "electron";
 
-// Custom APIs for renderer
-const api = {
-  onRfidCode: (callback: (code: string) => void) => {
-    ipcRenderer.on('rfid-code', (_, code) => callback(code));
-  },
-  removeRfidCodeListener: () => {
-    ipcRenderer.removeAllListeners('rfid-code');
-  },
-};
-
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI);
-    contextBridge.exposeInMainWorld('api', api);
-  } catch (error) {
-    console.error(error);
-  }
-} else {
-  // @ts-ignore (define in dts)
-  window.electron = electronAPI;
-  // @ts-ignore (define in dts)
-  window.api = api;
-}
+contextBridge.exposeInMainWorld("settingsAPI", {
+  getWorkdir: () => ipcRenderer.invoke("settings:getWorkdir"),
+  setWorkdir: (path: string) => ipcRenderer.invoke("settings:setWorkdir", path),
+  selectWorkdir: () => ipcRenderer.invoke("settings:selectWorkdir"),
+  getDefaultWorkdir: () => ipcRenderer.invoke("settings:getDefaultWorkdir"),
+});
