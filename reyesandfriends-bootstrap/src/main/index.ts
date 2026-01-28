@@ -6,7 +6,9 @@ import "./main.ts";
 import { app, shell, BrowserWindow } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import icon from '../../resources/app_icon.png?asset';
+import iconPng from '../../resources/app_icon.png?asset';
+import iconIco from '../../resources/app_icon.ico?asset';
+import iconIcns from '../../resources/app_icon.icns?asset';
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -14,7 +16,12 @@ function createWindow(): void {
     height: 720,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon:
+      process.platform === 'win32'
+        ? iconIco
+        : process.platform === 'darwin'
+        ? iconIcns
+        : iconPng,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
