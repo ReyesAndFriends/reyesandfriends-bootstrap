@@ -430,15 +430,18 @@ function ApacheView() {
             <button
               type="button"
               title="Limpiar selección"
+              className="button alert"
               style={{
-                background: "transparent",
-                border: "none",
-                fontSize: 28,
-                color: "#888",
-                cursor: "pointer",
+                fontSize: 22,
+                padding: "0 12px",
                 marginLeft: 16,
                 marginTop: 4,
                 lineHeight: 1,
+                height: 36,
+                minWidth: 36,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center"
               }}
               onClick={() => setSelectedRow(null)}
             >
