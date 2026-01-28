@@ -381,16 +381,24 @@ function ApacheView() {
   // Estado para el modal de eliminación
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  // Desactivar selección al hacer click fuera de la tabla
+  // Mejor manejo de selección: solo deselecciona si el click es fuera de la tabla Y fuera de los botones de acción
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       const table = document.getElementById("apache-table");
-      const generarBtn = document.getElementById("generar-conf-btn");
-      if (
-        table &&
-        !table.contains(e.target as Node) &&
-        (!generarBtn || !generarBtn.contains(e.target as Node))
-      ) {
+      // Si el click es sobre un botón de acción, no deseleccionar
+      const actionButtons = [
+        "generar-conf-btn",
+        "editar-btn",
+        "eliminar-btn",
+        "directorio-conf-btn"
+      ];
+      for (const btnId of actionButtons) {
+        const btn = document.getElementById(btnId);
+        if (btn && btn.contains(e.target as Node)) {
+          return;
+        }
+      }
+      if (table && !table.contains(e.target as Node)) {
         setSelectedRow(null);
       }
     }
@@ -533,6 +541,7 @@ function ApacheView() {
             Nueva
           </button>
           <button
+            id="editar-btn"
             className="button secondary"
             type="button"
             style={{ marginLeft: 8 }}
@@ -549,6 +558,7 @@ function ApacheView() {
             Editar
           </button>
           <button
+            id="eliminar-btn"
             className="button alert"
             type="button"
             style={{ marginLeft: 8 }}
@@ -558,6 +568,7 @@ function ApacheView() {
             Eliminar
           </button>
           <button
+            id="directorio-conf-btn"
             className="button secondary"
             type="button"
             style={{ marginLeft: 8 }}
