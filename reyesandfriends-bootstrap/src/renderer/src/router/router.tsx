@@ -8,6 +8,7 @@ import Preferences from '../views/Preferences'
 import About from '../views/About'
 
 import ApacheView from '@renderer/views/servers/apache/ApacheView'
+import NginxView from '@renderer/views/servers/nginx/NginxView'
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -61,6 +62,21 @@ const AppRoutes = () => {
               transition={{ type: "tween", duration: 0.2 }}
             >
               <ApacheView />
+            </motion.div>
+          }
+        />
+
+        <Route
+          path="/http-servers/nginx"
+          element={
+            <motion.div
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: "tween", duration: 0.2 }}
+            >
+              <NginxView />
             </motion.div>
           }
         />

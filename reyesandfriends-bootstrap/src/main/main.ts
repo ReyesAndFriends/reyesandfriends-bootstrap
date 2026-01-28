@@ -1,8 +1,107 @@
+
 import { ipcMain, dialog, shell } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import * as fsp from "fs/promises";
+const configDir = getConfigDir();
+
+const nginxServersPath = path.join(configDir, "nginx_servers.json");
+
+function ensureNginxServers() {
+  if (!fs.existsSync(nginxServersPath)) {
+    fs.writeFileSync(nginxServersPath, JSON.stringify([], null, 2));
+  }
+}
+
+function readNginxServers() {
+  ensureNginxServers();
+  return JSON.parse(fs.readFileSync(nginxServersPath, "utf-8"));
+}
+
+function writeNginxServers(data: any) {
+  ensureNginxServers();
+  fs.writeFileSync(nginxServersPath, JSON.stringify(data, null, 2));
+}
+
+// IPC handlers para Nginx Servers
+ipcMain.handle("nginxServers:getAll", async () => {
+  return readNginxServers();
+});
+
+ipcMain.handle("nginxServers:saveAll", async (_event, data) => {
+  writeNginxServers(data);
+});
+
+ipcMain.handle("nginxServers:add", async (_event, server) => {
+  const servers = readNginxServers();
+  servers.push(server);
+  writeNginxServers(servers);
+  return servers;
+});
+
+ipcMain.handle("nginxServers:removeAt", async (_event, index: number) => {
+  const servers = readNginxServers();
+  if (index >= 0 && index < servers.length) {
+    const server = servers[index];
+    let firstDomain = "";
+    if (server && typeof server.domains === "string") {
+      firstDomain = server.domains.split(",")[0].trim();
+    } else if (Array.isArray(server.domains) && server.domains.length > 0) {
+      firstDomain = String(server.domains[0]).trim();
+    }
+    if (firstDomain) {
+      const config = readConfig();
+      const baseDir = config.workdir ? config.workdir : getDefaultWorkdir();
+      const nginxDir = path.join(baseDir, "http-configs", "nginx");
+      const confFileName = `${firstDomain.replace(/\./g, "_")}.conf`;
+      const confFile = path.join(nginxDir, confFileName);
+      try {
+        if (fs.existsSync(confFile)) {
+          await fsp.unlink(confFile);
+        }
+      } catch (err) {}
+    }
+    servers.splice(index, 1);
+    writeNginxServers(servers);
+  }
+  return servers;
+});
+
+ipcMain.handle("nginxServers:saveConfFile", async (_event, filename: string, content: string, saveDir: string | null) => {
+  try {
+    let targetDir = saveDir;
+    if (!targetDir) {
+      const config = readConfig();
+      targetDir = config.workdir
+        ? path.join(config.workdir, "http-configs", "nginx")
+        : path.join(getDefaultWorkdir(), "http-configs", "nginx");
+    }
+    await fsp.mkdir(targetDir, { recursive: true });
+    const filePath = path.join(targetDir, filename);
+    await fsp.writeFile(filePath, content, "utf-8");
+    return { success: true, filePath };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle("nginxServers:fileExists", async (_event, filename: string, saveDir: string | null) => {
+  let targetDir = saveDir;
+  if (!targetDir) {
+    const config = readConfig();
+    targetDir = config.workdir
+      ? path.join(config.workdir, "http-configs", "nginx")
+      : path.join(getDefaultWorkdir(), "http-configs", "nginx");
+  }
+  const filePath = path.join(targetDir, filename);
+  try {
+    await fsp.access(filePath, fs.constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+});
 
 declare global {
   interface Window {
@@ -32,7 +131,6 @@ function getDefaultWorkdir() {
   return path.join(home, "ReyesAndFriendsBootstrap");
 }
 
-const configDir = getConfigDir();
 const configPath = path.join(configDir, "settings.json");
 const apacheServersPath = path.join(configDir, "apache_servers.json");
 
@@ -146,17 +244,27 @@ ipcMain.handle("apacheServers:removeAt", async (_event, index: number) => {
   return servers;
 });
 
-// Al final de los handlers IPC, agregar:
-ipcMain.handle("settings:openConfigDir", async () => {
-  // Lee el workdir desde settings.json y abre el subdirectorio http-configs/apache
+
+// Handler para abrir el directorio de configuraciones de Apache
+ipcMain.handle("settings:openApacheConfigDir", async () => {
   const config = readConfig();
   let baseDir = config.workdir && typeof config.workdir === "string"
     ? config.workdir
     : getDefaultWorkdir();
   const apacheDir = path.join(baseDir, "http-configs", "apache");
-  // Crear el directorio si no existe
   await fsp.mkdir(apacheDir, { recursive: true });
   return shell.openPath(apacheDir);
+});
+
+// Handler para abrir el directorio de configuraciones de Nginx
+ipcMain.handle("settings:openNginxConfigDir", async () => {
+  const config = readConfig();
+  let baseDir = config.workdir && typeof config.workdir === "string"
+    ? config.workdir
+    : getDefaultWorkdir();
+  const nginxDir = path.join(baseDir, "http-configs", "nginx");
+  await fsp.mkdir(nginxDir, { recursive: true });
+  return shell.openPath(nginxDir);
 });
 
 // NUEVO: Guardar archivo .conf en el directorio seleccionado
