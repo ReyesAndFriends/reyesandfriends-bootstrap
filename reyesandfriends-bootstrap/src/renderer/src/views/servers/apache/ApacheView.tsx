@@ -274,10 +274,7 @@ function ConfirmDeleteModal({
             className="button alert"
             type="button"
             style={{ marginLeft: 8 }}
-            onClick={() => {
-              onConfirm();
-              onClose();
-            }}
+            onClick={onConfirm}
           >
             Eliminar
           </button>
@@ -364,8 +361,20 @@ function ConfPreviewModal({
 }
 
 function ApacheView() {
-  const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const [rows, setRows] = useState<any[]>([]);
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
+
+  // Modal de edición
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalEditData, setModalEditData] = useState<Partial<ApacheConfig> | undefined>(undefined);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+
+  // Modal de confirmación de borrado
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  // Modal de preview .conf
+  const [confModalOpen, setConfModalOpen] = useState(false);
+  const [confPreviewConfig, setConfPreviewConfig] = useState<ApacheConfig | undefined>(undefined);
 
   useEffect(() => {
     window.apacheServersAPI?.getAll().then((data) => {
@@ -373,46 +382,16 @@ function ApacheView() {
     });
   }, []);
 
-  // Estado para modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalEditData, setModalEditData] = useState<Partial<ApacheConfig> | undefined>(undefined);
-  const [editIndex, setEditIndex] = useState<number | null>(null);
-
-  // Estado para el modal de eliminación
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-
-  // Mejor manejo de selección: solo deselecciona si el click es fuera de la tabla Y fuera de los botones de acción
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      const table = document.getElementById("apache-table");
-      // Si el click es sobre un botón de acción, no deseleccionar
-      const actionButtons = [
-        "generar-conf-btn",
-        "editar-btn",
-        "eliminar-btn",
-        "directorio-conf-btn"
-      ];
-      for (const btnId of actionButtons) {
-        const btn = document.getElementById(btnId);
-        if (btn && btn.contains(e.target as Node)) {
-          return;
-        }
-      }
-      if (table && !table.contains(e.target as Node)) {
-        setSelectedRow(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  // Selección: click selecciona, click de nuevo deselecciona
+  const handleRowClick = (idx: number) => {
+    setSelectedRow(prev => (prev === idx ? null : idx));
+  };
 
   const handleSave = async (data: ApacheConfig) => {
     if (editIndex === null) {
-      // Crear nuevo
       const newRows = await window.apacheServersAPI.add(data);
       setRows(newRows);
     } else {
-      // Editar existente
       const updatedRows = [...rows];
       updatedRows[editIndex] = data;
       await window.apacheServersAPI.saveAll(updatedRows);
@@ -427,11 +406,9 @@ function ApacheView() {
       const newRows = await window.apacheServersAPI.removeAt(selectedRow);
       setRows(newRows);
       setSelectedRow(null);
+      setDeleteModalOpen(false);
     }
   };
-
-  const [confModalOpen, setConfModalOpen] = useState(false);
-  const [confPreviewConfig, setConfPreviewConfig] = useState<ApacheConfig | undefined>(undefined);
 
   return (
     <div>
@@ -447,6 +424,27 @@ function ApacheView() {
           <h2 style={{ fontWeight: 600, fontSize: 28, margin: 0, verticalAlign: "middle" }}>
             Configuraciones Apache
           </h2>
+        </div>
+        <div className="cell shrink" style={{ paddingRight: 32 }}>
+          {selectedRow !== null && (
+            <button
+              type="button"
+              title="Limpiar selección"
+              style={{
+                background: "transparent",
+                border: "none",
+                fontSize: 28,
+                color: "#888",
+                cursor: "pointer",
+                marginLeft: 16,
+                marginTop: 4,
+                lineHeight: 1,
+              }}
+              onClick={() => setSelectedRow(null)}
+            >
+              ×
+            </button>
+          )}
         </div>
       </div>
 
@@ -500,7 +498,7 @@ function ApacheView() {
                   rows.map((row, idx) => (
                     <tr
                       key={idx}
-                      onClick={() => setSelectedRow(idx)}
+                      onClick={() => handleRowClick(idx)}
                       style={
                         selectedRow === idx
                           ? {
