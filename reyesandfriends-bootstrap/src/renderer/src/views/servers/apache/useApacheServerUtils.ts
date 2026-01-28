@@ -1,5 +1,5 @@
 type ApacheConfig = {
-  dominios: string;
+  domains: string;
   http: boolean;
   https: boolean;
   path: string;
@@ -14,9 +14,9 @@ type ApacheConfig = {
 
 function useApacheServerUtils() {
   function generateApacheConf(config: ApacheConfig): string {
-    const dominios = config.dominios.split(",").map(d => d.trim()).filter(Boolean);
-    const serverName = dominios[0] || "localhost";
-    const serverAlias = dominios.slice(1).join(" ");
+    const domains = config.domains.split(",").map(d => d.trim()).filter(Boolean);
+    const serverName = domains[0] || "localhost";
+    const serverAlias = domains.slice(1).join(" ");
     const docRoot = config.path || "/var/www/html";
     const proxy = config.isProxy;
     const proxyTarget = config.proxyTarget;

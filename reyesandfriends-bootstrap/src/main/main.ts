@@ -115,6 +115,31 @@ ipcMain.handle("apacheServers:add", async (_event, server) => {
 ipcMain.handle("apacheServers:removeAt", async (_event, index: number) => {
   const servers = readApacheServers();
   if (index >= 0 && index < servers.length) {
+    const server = servers[index];
+    let firstDomain = "";
+    if (server && typeof server.domains === "string") {
+      firstDomain = server.domains.split(",")[0].trim();
+    } else if (Array.isArray(server.domains) && server.domains.length > 0) {
+      firstDomain = String(server.domains[0]).trim();
+    }
+
+    if (firstDomain) {
+      const config = readConfig();
+      const baseDir = config.workdir
+        ? config.workdir
+        : getDefaultWorkdir();
+      const apacheDir = path.join(baseDir, "http-configs", "apache");
+
+      const confFileName = `${firstDomain.replace(/\./g, "_")}.conf`;
+      const confFile = path.join(apacheDir, confFileName);
+      try {
+        if (fs.existsSync(confFile)) {
+          await fsp.unlink(confFile);
+        } else {
+        }
+      } catch (err) {
+      }
+    }
     servers.splice(index, 1);
     writeApacheServers(servers);
   }

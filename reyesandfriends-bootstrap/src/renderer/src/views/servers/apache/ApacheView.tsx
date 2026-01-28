@@ -3,7 +3,7 @@ import useApacheServerUtils from "./useApacheServerUtils";
 import { AnimatePresence, motion } from "framer-motion";
 
 type ApacheConfig = {
-  dominios: string;
+  domains: string;
   http: boolean;
   https: boolean;
   path: string;
@@ -27,7 +27,7 @@ function ApacheConfigModal({
   initialData?: Partial<ApacheConfig>;
   onSave?: (data: ApacheConfig) => void;
 }) {
-  const [dominios, setDominios] = useState(initialData?.dominios ?? "");
+  const [domains, setDomains] = useState(initialData?.domains ?? "");
   const [http, setHttp] = useState(initialData?.http ?? true);
   const [https, setHttps] = useState(initialData?.https ?? false);
   const [path, setPath] = useState(initialData?.path ?? "/var/www/html");
@@ -40,7 +40,7 @@ function ApacheConfigModal({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setDominios(initialData?.dominios ?? "");
+    setDomains(initialData?.domains ?? "");
     setHttp(initialData?.http ?? true);
     setHttps(initialData?.https ?? false);
     setPath(initialData?.path ?? "/var/www/html");
@@ -83,19 +83,19 @@ function ApacheConfigModal({
 
   // Validaciones
   useEffect(() => {
-    // Validar dominios: al menos uno no vacío y con formato dominio.tld
-    const dominiosList = dominios
+    // Validar domains: al menos uno no vacío y con formato dominio.tld
+    const domainsList = domains
       .split(",")
       .map(d => d.trim())
       .filter(d => d.length > 0);
 
-    if (dominiosList.length === 0) {
+    if (domainsList.length === 0) {
       setError("Debes ingresar al menos un dominio.");
       return;
     }
     // Validar formato dominio.tld (básico)
     const dominioRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (dominiosList.some(d => !dominioRegex.test(d))) {
+    if (domainsList.some(d => !dominioRegex.test(d))) {
       setError("Todos los dominios deben tener formato válido (ej: midominio.com).");
       return;
     }
@@ -118,7 +118,7 @@ function ApacheConfigModal({
       }
     }
     setError(null);
-  }, [dominios, http, https, path, isProxy, proxyTarget, ssl, sslCustomCert, sslCustomKey]);
+  }, [domains, http, https, path, isProxy, proxyTarget, ssl, sslCustomCert, sslCustomKey]);
 
   // Lógica de visibilidad
   const showSslCustom = ssl === "custom" && https;
@@ -148,7 +148,7 @@ function ApacheConfigModal({
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label>
             Dominios (separados por coma):
-            <input type="text" value={dominios} onChange={e => setDominios(e.target.value)} />
+            <input type="text" value={domains} onChange={e => setDomains(e.target.value)} />
           </label>
           <label>
             <input type="checkbox" checked={http} onChange={e => setHttp(e.target.checked)} />
@@ -247,7 +247,7 @@ function ApacheConfigModal({
             onClick={() => {
               if (onSave && !error) {
                 onSave({
-                  dominios,
+                  domains,
                   http,
                   https,
                   path,
@@ -334,7 +334,7 @@ function ConfPreviewModal({
 
   useEffect(() => {
     if (config) {
-      const firstDomain = config.dominios?.split(",")[0]?.trim() || "apache";
+      const firstDomain = config.domains?.split(",")[0]?.trim() || "apache";
       setFilename(`${firstDomain.replace(/\./g, "_")}.conf`);
       setContent(generateApacheConf(config));
     }
@@ -662,7 +662,7 @@ function ApacheView() {
                           : { cursor: "pointer" }
                       }
                     >
-                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.dominios}</td>
+                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.domains}</td>
                       <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.http ? "80" : "—"}</td>
                       <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.https ? "443" : "—"}</td>
                       <td style={selectedRow === idx ? { color: "#fff" } : {}}>
