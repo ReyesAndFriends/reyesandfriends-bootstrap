@@ -210,15 +210,6 @@ function ApacheView() {
           >
             Eliminar
           </button>
-          <button
-            id="directorio-conf-btn"
-            className="button secondary"
-            type="button"
-            style={{ marginLeft: 8 }}
-            disabled={selectedRow === null}
-          >
-            Directorio del .conf
-          </button>
         </div>
         <div className="cell shrink">
           <button

@@ -136,7 +136,6 @@ function NginxView() {
 						}
 					}}>Editar</button>
 					<button id="eliminar-btn" className="button alert" type="button" style={{ marginLeft: 8 }} disabled={selectedRow === null} onClick={() => setDeleteModalOpen(true)}>Eliminar</button>
-					<button id="directorio-conf-btn" className="button secondary" type="button" style={{ marginLeft: 8 }} disabled={selectedRow === null}>Directorio del .conf</button>
 				</div>
 				<div className="cell shrink">
 					<button id="generar-conf-btn" className="button secondary" type="button" onClick={() => {
