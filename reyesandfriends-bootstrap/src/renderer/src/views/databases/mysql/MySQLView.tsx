@@ -219,10 +219,10 @@ function MySQLView() {
                     if (selectedRow === null) return;
                     const config = rows[selectedRow];
                     const sql = generateMySQLScript(config);
-                    // Comprobar si existe el archivo antes de guardar
-                    const exists = await window.mysqlScriptsAPI.fileExists(filename, saveDir);
+                    // Comprobar si existe el archivo antes de guardar (pasar dbName)
+                    const exists = await window.mysqlScriptsAPI.fileExists(filename, saveDir, config.dbName);
                     let proceed = true;
-                    let filePath = (saveDir || "") + "/" + filename;
+                    let filePath = ((saveDir || "") + "/" + (config.dbName || "") + "/" + filename).replace(/\/+/g, "/");
                     if (exists) {
                         proceed = await new Promise((resolve) => {
                             setOverwriteModal({

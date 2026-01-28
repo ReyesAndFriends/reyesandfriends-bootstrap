@@ -30,11 +30,12 @@ function SQLPreviewModal({
   useEffect(() => {
     window.settingsAPI?.getWorkdir().then((dir) => {
       setWorkdir(dir);
-      setDefaultSaveDir(`${dir}/sql-dumps/mysql`);
+      // Mostrar la ruta real: databases/mysql/<dbName>
+      setDefaultSaveDir(data?.dbName ? `${dir}/databases/mysql/${data.dbName}` : `${dir}/databases/mysql`);
     });
     setSaveOption("default");
     setCustomPath(null);
-  }, [open]);
+  }, [open, data]);
 
   const handleChooseCustomPath = async () => {
     const selected = await window.settingsAPI?.selectWorkdir();
@@ -71,7 +72,11 @@ function SQLPreviewModal({
             <button className="button secondary" type="button" onClick={handleChooseCustomPath} style={{ marginRight: 8 }}>
               Elegir carpeta destino...
             </button>
-            <span style={{ fontSize: 13, color: "#888" }}>{customPath ? customPath : "No se ha seleccionado carpeta"}</span>
+            <span style={{ fontSize: 13, color: "#888" }}>
+              {customPath && data?.dbName
+                ? `${customPath}/${data.dbName}`
+                : customPath || "No se ha seleccionado carpeta"}
+            </span>
           </div>
         )}
         <pre style={{ background: "#222", color: "#fff", padding: 16, borderRadius: 4, maxHeight: 350, overflow: "auto", fontSize: 14, marginBottom: 16, flex: "1 1 auto" }}>
@@ -87,7 +92,8 @@ function SQLPreviewModal({
             disabled={(saveOption === "custom" && !customPath) || !filename.trim()}
             onClick={async () => {
               if (onSave) {
-                await onSave(filename, sql, saveOption === "default" ? defaultSaveDir : customPath || null);
+                // Siempre pasar la carpeta base, el backend se encarga de crear la subcarpeta
+                await onSave(filename, sql, saveOption === "default" ? workdir + "/databases/mysql" : customPath || null);
               }
             }}
           >

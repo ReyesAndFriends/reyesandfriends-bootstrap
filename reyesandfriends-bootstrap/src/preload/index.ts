@@ -1,4 +1,3 @@
-
 import { contextBridge, ipcRenderer } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
 
@@ -9,7 +8,8 @@ contextBridge.exposeInMainWorld("mysqlScriptsAPI", {
   update: (index: number, script: any) => ipcRenderer.invoke("mysqlScripts:update", index, script),
   removeAt: (index: number) => ipcRenderer.invoke("mysqlScripts:removeAt", index),
   generateSQLFile: (index: number, filename: string, content: string, saveDir: string | null) => ipcRenderer.invoke("mysqlScripts:generateSQLFile", index, filename, content, saveDir),
-  fileExists: (filename: string, saveDir: string | null) => ipcRenderer.invoke("mysqlScripts:fileExists", filename, saveDir),
+  fileExists: (filename: string, saveDir: string | null, dbName?: string) =>
+    ipcRenderer.invoke("mysqlScripts:fileExists", filename, saveDir, dbName),
   openScriptsDir: () => ipcRenderer.invoke("mysqlScripts:openScriptsDir"),
 });
 

@@ -1,6 +1,7 @@
 function mysqlScriptsDir() {
   const config = readConfig();
   const baseDir = config.workdir ? config.workdir : getDefaultWorkdir();
+  // Siempre usar databases/mysql
   return path.join(baseDir, "databases", "mysql");
 }
 
@@ -46,11 +47,20 @@ ipcMain.handle("mysqlScripts:removeAt", async (_event, index: number) => {
   const scripts = readMySQLScripts();
   if (index >= 0 && index < scripts.length) {
     const script = scripts[index];
-    // Eliminar archivo .sql si existe
+    // Eliminar todos los archivos .sql en la carpeta databases/mysql/<dbName>
     const sqlDir = path.join(mysqlScriptsDir(), script.dbName);
-    const sqlFile = path.join(sqlDir, `${script.dbName}.sql`);
     try {
-      if (fs.existsSync(sqlFile)) await fsp.unlink(sqlFile);
+      if (fs.existsSync(sqlDir)) {
+        const files = await fsp.readdir(sqlDir);
+        for (const file of files) {
+          if (file.endsWith(".sql")) {
+            const filePath = path.join(sqlDir, file);
+            try {
+              await fsp.unlink(filePath);
+            } catch {}
+          }
+        }
+      }
     } catch {}
     scripts.splice(index, 1);
     writeMySQLScripts(scripts);
@@ -62,12 +72,16 @@ ipcMain.handle("mysqlScripts:removeAt", async (_event, index: number) => {
 ipcMain.handle("mysqlScripts:generateSQLFile", async (_event, index: number, filename: string, content: string, saveDir: string | null) => {
   const scripts = readMySQLScripts();
   if (index < 0 || index >= scripts.length) return { success: false, error: "Índice inválido" };
+  const dbName = scripts[index].dbName;
   let targetDir = saveDir;
   if (!targetDir) {
     // Por defecto, los .sql van en el workdir/databases/mysql/<dbName>
     const config = readConfig();
     const baseDir = config.workdir ? config.workdir : getDefaultWorkdir();
-    targetDir = path.join(baseDir, "databases", "mysql", scripts[index].dbName);
+    targetDir = path.join(baseDir, "databases", "mysql", dbName);
+  } else {
+    // Si el usuario elige una carpeta personalizada, igual crear subcarpeta con el nombre de la base
+    targetDir = path.join(targetDir, dbName);
   }
   await fsp.mkdir(targetDir, { recursive: true });
   const filePath = path.join(targetDir, filename);
@@ -79,14 +93,16 @@ ipcMain.handle("mysqlScripts:generateSQLFile", async (_event, index: number, fil
   }
 });
 
-
-ipcMain.handle("mysqlScripts:fileExists", async (_event, filename: string, saveDir: string | null) => {
+ipcMain.handle("mysqlScripts:fileExists", async (_event, filename: string, saveDir: string | null, dbName?: string) => {
   let targetDir = saveDir;
   if (!targetDir) {
-    // Por defecto, los .sql van en el workdir/databases/mysql
+    // Por defecto, los .sql van en el workdir/databases/mysql/<dbName>
     const config = readConfig();
     const baseDir = config.workdir ? config.workdir : getDefaultWorkdir();
-    targetDir = path.join(baseDir, "databases", "mysql");
+    targetDir = path.join(baseDir, "databases", "mysql", dbName || "");
+  } else {
+    // Si el usuario elige una carpeta personalizada, igual buscar en la subcarpeta
+    targetDir = path.join(targetDir, dbName || "");
   }
   const filePath = path.join(targetDir, filename);
   try {
