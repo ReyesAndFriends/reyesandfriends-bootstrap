@@ -59,33 +59,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <h5 style={{ color: "#fff", margin: 0, fontSize: "1rem", lineHeight: "1.1" }}>Reyes&Friends<br />Bootstrap</h5>
           </div>
 
-
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              background: "#111",
-              color: "#f1f1f1",
-              border: "none",
-              borderRadius: "2px",
-              padding: "0.4rem 0",
-              textAlign: "center",
-              fontSize: "1rem",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "0.18rem",
-              cursor: "pointer",
-              width: "100%",
-              marginBottom: "1rem",
-            }}
-            title="Volver"
-            onMouseOver={e => (e.currentTarget.style.background = "#31343b")}
-            onMouseOut={e => (e.currentTarget.style.background = "#111")}
-          >
-            <img src="/icons/pan-left.svg" alt="Volver" style={{ width: 22, height: 22, objectFit: "contain" }} />
-            <span style={{ fontSize: "0.92rem" }}>Atrás</span>
-          </button>
-
           {sidebarButtons.map((btn) => (
             <Link
               key={btn.label}
@@ -114,6 +87,34 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <span style={{ fontSize: "0.92rem", display: "block", wordBreak: "break-word" }}>{btn.label}</span>
             </Link>
           ))}
+
+          {/* Botón Atrás al final */}
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              background: "#111",
+              color: "#f1f1f1",
+              border: "none",
+              borderRadius: "2px",
+              padding: "0.4rem 0",
+              textAlign: "center",
+              fontSize: "1rem",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.18rem",
+              cursor: "pointer",
+              width: "100%",
+              marginTop: "auto",
+              marginBottom: "1rem",
+            }}
+            title="Volver"
+            onMouseOver={e => (e.currentTarget.style.background = "#31343b")}
+            onMouseOut={e => (e.currentTarget.style.background = "#111")}
+          >
+            <img src="/icons/pan-left.svg" alt="Volver" style={{ width: 22, height: 22, objectFit: "contain" }} />
+            <span style={{ fontSize: "0.92rem" }}>Atrás</span>
+          </button>
         </aside>
         
         <main
