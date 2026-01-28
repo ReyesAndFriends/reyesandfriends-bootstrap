@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import useApacheServerUtils from "./useApacheServerUtils";
 import { AnimatePresence, motion } from "framer-motion";
-import React from "react";
 
 type ApacheConfig = {
   dominios: string;
@@ -21,6 +20,7 @@ function ApacheConfigModal({
   open,
   onClose,
   initialData,
+  onSave,
 }: {
   open: boolean;
   onClose: () => void;
@@ -239,6 +239,32 @@ function ApacheConfigModal({
         )}
         <div style={{ marginTop: 24, textAlign: "right" }}>
           <button className="button secondary" type="button" onClick={onClose}>Cerrar</button>
+          <button
+            className="button primary"
+            type="button"
+            style={{ marginLeft: 8 }}
+            disabled={!!error}
+            onClick={() => {
+              if (onSave && !error) {
+                onSave({
+                  dominios,
+                  http,
+                  https,
+                  path,
+                  ssl,
+                  sslCustomCert: ssl === "custom" && https ? sslCustomCert : undefined,
+                  sslCustomKey: ssl === "custom" && https ? sslCustomKey : undefined,
+                  sslCustom: ssl === "custom" && https ? `${sslCustomCert}::${sslCustomKey}` : undefined,
+                  redirect,
+                  isProxy,
+                  proxyTarget,
+                });
+                onClose();
+              }
+            }}
+          >
+            Guardar
+          </button>
         </div>
       </div>
     </div>
