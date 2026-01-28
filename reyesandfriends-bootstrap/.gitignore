@@ -26,3 +26,15 @@ dist-ssr
 
 
 release
+
+# Electron build output
+dist
+dist-electron
+build
+out
+
+# Electron package files
+*.asar
+
+# Node modules
+node_modules
