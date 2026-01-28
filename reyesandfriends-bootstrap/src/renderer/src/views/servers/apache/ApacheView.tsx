@@ -6,7 +6,9 @@ type ApacheConfig = {
   https: boolean;
   path: string;
   ssl: "certbot" | "snakeoil" | "custom";
-  sslCustom: string;
+  sslCustomCert?: string;
+  sslCustomKey?: string;
+  sslCustom?: string;
   redirect: boolean;
   isProxy: boolean;
   proxyTarget: string;
@@ -28,10 +30,12 @@ function ApacheConfigModal({
   const [https, setHttps] = useState(initialData?.https ?? false);
   const [path, setPath] = useState(initialData?.path ?? "/var/www/html");
   const [ssl, setSsl] = useState<"certbot" | "snakeoil" | "custom">(initialData?.ssl ?? "certbot");
-  const [sslCustom, setSslCustom] = useState(initialData?.sslCustom ?? "");
+  const [sslCustomCert, setSslCustomCert] = useState(initialData?.sslCustomCert ?? (initialData?.sslCustom?.split("::")[0] ?? ""));
+  const [sslCustomKey, setSslCustomKey] = useState(initialData?.sslCustomKey ?? (initialData?.sslCustom?.split("::")[1] ?? ""));
   const [redirect, setRedirect] = useState(initialData?.redirect ?? false);
   const [isProxy, setIsProxy] = useState(initialData?.isProxy ?? false);
   const [proxyTarget, setProxyTarget] = useState(initialData?.proxyTarget ?? "");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setDominios(initialData?.dominios ?? "");
@@ -39,11 +43,52 @@ function ApacheConfigModal({
     setHttps(initialData?.https ?? false);
     setPath(initialData?.path ?? "/var/www/html");
     setSsl(initialData?.ssl ?? "certbot");
-    setSslCustom(initialData?.sslCustom ?? "");
+    setSslCustomCert(initialData?.sslCustomCert ?? (initialData?.sslCustom?.split("::")[0] ?? ""));
+    setSslCustomKey(initialData?.sslCustomKey ?? (initialData?.sslCustom?.split("::")[1] ?? ""));
     setRedirect(initialData?.redirect ?? false);
     setIsProxy(initialData?.isProxy ?? false);
     setProxyTarget(initialData?.proxyTarget ?? "");
+    setError(null);
   }, [open, initialData]);
+
+  // Validaciones
+  useEffect(() => {
+    // Validar dominios: al menos uno no vacío y con formato dominio.tld
+    const dominiosList = dominios
+      .split(",")
+      .map(d => d.trim())
+      .filter(d => d.length > 0);
+
+    if (dominiosList.length === 0) {
+      setError("Debes ingresar al menos un dominio.");
+      return;
+    }
+    // Validar formato dominio.tld (básico)
+    const dominioRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (dominiosList.some(d => !dominioRegex.test(d))) {
+      setError("Todos los dominios deben tener formato válido (ej: midominio.com).");
+      return;
+    }
+    if (!http && !https) {
+      setError("Debes habilitar HTTP (80), HTTPS (443) o ambos.");
+      return;
+    }
+    if (!isProxy && !path.trim()) {
+      setError("El path del sitio es obligatorio.");
+      return;
+    }
+    if (isProxy && !proxyTarget.trim()) {
+      setError("El destino del proxy es obligatorio.");
+      return;
+    }
+    if (ssl === "custom" && https) {
+      if (!sslCustomCert.trim() || !sslCustomKey.trim()) {
+        setError("Debes ingresar la ruta del certificado y la clave privada.");
+        return;
+      }
+    }
+    setError(null);
+  }, [dominios, http, https, path, isProxy, proxyTarget, ssl, sslCustomCert, sslCustomKey]);
 
   // Lógica de visibilidad
   const showSslCustom = ssl === "custom" && https;
@@ -56,13 +101,19 @@ function ApacheConfigModal({
       position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
       background: "rgba(0,0,0,0.3)", zIndex: 1000
     }}>
-      <div className="modal" style={{
-        background: "#fff",
-        maxWidth: 480,
-        margin: "60px auto",
-        padding: 24,
-        position: "relative"
-      }}>
+      <div
+        className="modal"
+        style={{
+          background: "#fff",
+          maxWidth: 480,
+          margin: "60px auto",
+          padding: 24,
+          position: "relative",
+          maxHeight: "90vh",
+          overflowY: "auto",
+          borderRadius: 6,
+        }}
+      >
         <h3 style={{ marginTop: 0 }}>Configuración Apache</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label>
@@ -90,16 +141,28 @@ function ApacheConfigModal({
             </select>
           </label>
           {showSslCustom && (
-            <label>
-              Ruta cert y key (custom):
-              <input
-                type="text"
-                placeholder="/ruta/cert.pem::/ruta/key.pem"
-                value={sslCustom}
-                onChange={e => setSslCustom(e.target.value)}
-                disabled={!showSslCustom}
-              />
-            </label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <label>
+                Ruta del certificado (.crt/.pem):
+                <input
+                  type="text"
+                  placeholder="/ruta/cert.pem"
+                  value={sslCustomCert}
+                  onChange={e => setSslCustomCert(e.target.value)}
+                  disabled={!showSslCustom}
+                />
+              </label>
+              <label>
+                Ruta de la clave privada (.key):
+                <input
+                  type="text"
+                  placeholder="/ruta/key.pem"
+                  value={sslCustomKey}
+                  onChange={e => setSslCustomKey(e.target.value)}
+                  disabled={!showSslCustom}
+                />
+              </label>
+            </div>
           )}
           <label style={{ opacity: https ? 1 : 0.5 }}>
             <input
@@ -139,27 +202,35 @@ function ApacheConfigModal({
             />
           </label>
         </div>
+        {error && (
+          <div className="callout alert" style={{ marginTop: 16, marginBottom: 0 }}>
+            {error}
+          </div>
+        )}
         <div style={{ marginTop: 24, textAlign: "right" }}>
           <button className="button secondary" type="button" onClick={onClose}>Cerrar</button>
           <button
             className="button primary"
             type="button"
             style={{ marginLeft: 8 }}
+            disabled={!!error}
             onClick={() => {
-              if (onSave) {
+              if (onSave && !error) {
                 onSave({
                   dominios,
                   http,
                   https,
                   path,
                   ssl,
-                  sslCustom,
+                  sslCustomCert: ssl === "custom" && https ? sslCustomCert : undefined,
+                  sslCustomKey: ssl === "custom" && https ? sslCustomKey : undefined,
+                  sslCustom: ssl === "custom" && https ? `${sslCustomCert}::${sslCustomKey}` : undefined,
                   redirect,
                   isProxy,
                   proxyTarget,
                 });
+                onClose();
               }
-              onClose();
             }}
           >
             Guardar
