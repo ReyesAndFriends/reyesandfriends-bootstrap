@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 declare global {
   interface Window {
@@ -16,6 +17,7 @@ const Preferences: React.FC = () => {
   const [defaultWorkdir, setDefaultWorkdir] = useState("");
   const [selecting, setSelecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ visible: boolean; message: string }>({ visible: false, message: "" });
 
   useEffect(() => {
     if (!window.settingsAPI) return;
@@ -27,6 +29,11 @@ const Preferences: React.FC = () => {
     });
   }, []);
 
+  const showToast = (message: string) => {
+    setToast({ visible: true, message });
+    setTimeout(() => setToast({ visible: false, message: "" }), 3000);
+  };
+
   const handleSelectFolder = async () => {
     setSelecting(true);
     setError(null);
@@ -35,6 +42,7 @@ const Preferences: React.FC = () => {
       if (selected) {
         await window.settingsAPI?.setWorkdir(selected);
         setWorkdir(selected);
+        showToast("Directorio de trabajo actualizado.");
       }
     } catch (e) {
       setError("No se pudo seleccionar la carpeta.");
@@ -47,6 +55,7 @@ const Preferences: React.FC = () => {
     try {
       await window.settingsAPI?.setWorkdir(defaultWorkdir);
       setWorkdir(defaultWorkdir);
+      showToast("Directorio restaurado al original.");
     } catch (e) {
       setError("No se pudo restaurar el directorio original.");
     }
@@ -102,6 +111,31 @@ const Preferences: React.FC = () => {
           {error}
         </div>
       )}
+      <AnimatePresence>
+        {toast.visible && (
+          <motion.div
+            className="callout success"
+            style={{
+              position: "fixed",
+              bottom: 24,
+              right: 24,
+              margin: 0,
+              borderRadius: 0,
+              minWidth: 220,
+              maxWidth: 400,
+              zIndex: 1000,
+              fontSize: 16,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.25 }}
+          >
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
