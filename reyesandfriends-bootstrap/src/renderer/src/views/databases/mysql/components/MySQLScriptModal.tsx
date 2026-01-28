@@ -74,7 +74,23 @@ function MySQLScriptModal({
           <label>
             Contraseña:
             <input type="password" value={userPassword} onChange={e => setUserPassword(e.target.value)} />
-            <button type="button" style={{ marginLeft: 8 }} onClick={() => setUserPassword(Math.random().toString(36).slice(-12))}>Generar segura</button>
+            <button
+              type="button"
+              className="button success"
+              style={{ marginLeft: 8 }}
+              onClick={() => setUserPassword(Math.random().toString(36).slice(-12))}
+            >
+              Generar segura
+            </button>
+          </label>
+          <label>
+            Preset:
+            <select value={preset} onChange={e => setPreset(e.target.value)}>
+              <option value="personalizado">personalizado</option>
+              <option value="produccion">producción</option>
+              <option value="desarrollo">desarrollo</option>
+              <option value="solo_lectura">solo_lectura</option>
+            </select>
           </label>
           <label>
             Privilegios:
@@ -90,15 +106,6 @@ function MySQLScriptModal({
             {host === "custom" && (
               <input type="text" placeholder="Ej: 192.168.1.100" value={host !== "localhost" && host !== "%" ? host : ""} onChange={e => setHost(e.target.value)} />
             )}
-          </label>
-          <label>
-            Preset:
-            <select value={preset} onChange={e => setPreset(e.target.value)}>
-              <option value="personalizado">personalizado</option>
-              <option value="produccion">producción</option>
-              <option value="desarrollo">desarrollo</option>
-              <option value="solo_lectura">solo_lectura</option>
-            </select>
           </label>
           <label>
             Codificación (charset):
