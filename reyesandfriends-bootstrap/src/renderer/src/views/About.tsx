@@ -29,32 +29,32 @@ const About: React.FC = () => (
         }}
       >
         <div className="callout primary">
-          <h4>Reyes & Friends Bootstrap</h4>
+          <h4>Reyes & Friends - Bootstrap</h4>
           <p>
-            Aplicación desarrollada por <strong>Marcos Reyes</strong> y colaboradores.
+            Aplicación desarrollada por <strong>Marcos Reyes</strong> y Reyes&Friends.
           </p>
           <p>
-            Esta aplicación está diseñada para facilitar la gestión de proyectos y configuraciones en un entorno de escritorio.
+            Esta aplicación está diseñada para facilitar la gestión de proyectos y configuraciones en un entorno de escritorio. Proporciona una interfaz sencilla y eficiente para usuarios que buscan una solución fácil de usar.
           </p>
         </div>
         <div className="callout">
           <h5>Licencia</h5>
-          <p>
+          <p style={{ textAlign: "center", marginBottom: 16 }}>
+            Esta aplicación está licenciada bajo la licencia MIT. Puedes copiar, modificar y distribuir el software como desees.
+          </p>
+          <div style={{ display: "flex", justifyContent: "center" }}>
             <button
               className="button tiny secondary"
-              style={{ marginBottom: 8 }}
               onClick={() =>
-                window.open(
-                  "https://github.com/reyesandfriends/reyesandfriends-bootstrap/blob/main/LICENSE",
-                  "_blank"
-                )
+          window.open(
+            "https://github.com/reyesandfriends/reyesandfriends-bootstrap/blob/main/LICENSE",
+            "_blank"
+          )
               }
             >
               MIT License
             </button>
-            <br />
-            Puedes usar, modificar y distribuir este software libremente.
-          </p>
+          </div>
         </div>
         <div className="text-center">
           <small>© {new Date().getFullYear()} Reyes&Friends</small>

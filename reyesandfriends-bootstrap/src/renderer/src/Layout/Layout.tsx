@@ -88,7 +88,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </Link>
           ))}
 
-          {/* Botón Atrás al final */}
           <button
             onClick={() => navigate(-1)}
             style={{
