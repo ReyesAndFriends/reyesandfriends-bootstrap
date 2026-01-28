@@ -12,28 +12,33 @@ function Home() {
       >
         <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
           <img
-        src="/icons/app_icon.png"
-        alt="Icono"
-        style={{ width: 64, height: 64, marginRight: 24, background: 'transparent' }}
+            src="/icons/app_icon.png"
+            alt="Icono"
+            style={{ width: 64, height: 64, marginRight: 24, background: 'transparent' }}
           />
           <div>
-        <h1 style={{ color: 'white' }}>Simplifica tus tareas repetitivas</h1>
-        <p className="lead" style={{ color: 'white' }}>
-          Un gestor de utilidades para desarrolladores y administradores de sistemas para una puesta a producción rápida.
-        </p>
+            <h2 style={{ color: 'white' }}>Simplifica tus tareas repetitivas</h2>
+            <p className="lead" style={{ color: 'white' }}>
+              Un gestor de utilidades para desarrolladores y administradores de sistemas para una puesta a producción rápida.
+            </p>
           </div>
         </div>
       </div>
-      
-      <div className="row">
-        <div className="medium-6 columns">
-          <h3>Te damos la bienvenida</h3>
-          <p>
-            En este programa puedes encontrar diversas utilidades diseñadas para facilitar y acelerar el proceso de puesta a producción de tus proyectos. Desdes scripts para servidores web, bases de datos, entre otras herramientas útiles.
-          </p>
-            <p>Sabemos que estas tareas no son difíciles, pero sí repetitivas.</p>
-        </div>
 
+      <div className="callout" style={{ padding: 16 }}>
+        <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
+          <img
+            src="/icons/folder.svg"
+            alt="Inicio"
+            style={{ width: 40, height: 40, marginRight: 16, background: 'transparent' }}
+          />
+          <div>
+            <h2 style={{ fontSize: 20, margin: 0 }}>Te damos la bienvenida</h2>
+            <p className="lead" style={{ fontSize: 14, margin: 0 }}>
+              Selecciona una de las categorías a continuación para comenzar a generar configuraciones y gestionar tus herramientas.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="row align-center" style={{ marginTop: 40 }}>
@@ -46,8 +51,7 @@ function Home() {
             paddingRight: 0
           }}
         >
-          <h4 className="text-center">Para empezar, selecciona una categoría:</h4>
-          
+
           <Link to="/http-servers" className="callout" style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
             <img
               src="/icons/network-server.svg"

@@ -71,72 +71,91 @@ const Preferences: React.FC = () => {
   }
 
   return (
-    <div className="callout secondary" style={{ maxWidth: 900, margin: "2rem auto" }}>
-      <h4>Preferencias</h4>
-      <div className="callout primary" style={{ marginBottom: 16 }}>
-        <label>
-          <b>Directorio de trabajo actual:</b>
-        </label>
-        <div className="input-group">
-          <input
-            className="input-group-field"
-            type="text"
-            value={workdir}
-            disabled
-            style={{ minWidth: 500, width: "100%", background: "#f3f3f3" }}
+    <>
+
+      <div className="callout" style={{ padding: 16 }}>
+        <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
+          <img
+            src="/icons/preferences-desktop-icons.svg"
+            alt="Inicio"
+            style={{ width: 40, height: 40, marginRight: 16, background: 'transparent' }}
           />
-          <div className="input-group-button">
-            <button
-              type="button"
-              className="button primary"
-              onClick={handleSelectFolder}
-              disabled={selecting}
-              title="Seleccionar carpeta..."
-            >
-              <i className="fi-folder" style={{ marginRight: 4 }} /> {selecting ? "Abriendo..." : "Seleccionar carpeta"}
-            </button>
+          <div>
+            <h2 style={{ fontSize: 20, margin: 0 }}>Preferencias</h2>
+            <p className="lead" style={{ fontSize: 14, margin: 0 }}>
+              Configura las preferencias de la aplicación.
+            </p>
           </div>
         </div>
       </div>
-      <div style={{ marginTop: 12 }}>
-        <button type="button" className="button warning" onClick={handleRestore}>
-          Restaurar original
-        </button>
-      </div>
-      <div style={{ marginTop: 16, fontSize: 12, color: "#888" }}>
-        Por defecto se utilizará <span style={{ fontFamily: "monospace" }}>{defaultWorkdir}</span>
-      </div>
-      {error && (
-        <div className="callout alert" style={{ marginTop: 16 }}>
-          {error}
+
+      <div className="callout secondary" style={{ maxWidth: 900, margin: "2rem auto" }}>
+        <h4>Preferencias</h4>
+        <div className="callout primary" style={{ marginBottom: 16 }}>
+          <label>
+            <b>Directorio de trabajo actual:</b>
+          </label>
+          <div className="input-group">
+            <input
+              className="input-group-field"
+              type="text"
+              value={workdir}
+              disabled
+              style={{ minWidth: 500, width: "100%", background: "#f3f3f3" }}
+            />
+            <div className="input-group-button">
+              <button
+                type="button"
+                className="button primary"
+                onClick={handleSelectFolder}
+                disabled={selecting}
+                title="Seleccionar carpeta..."
+              >
+                <i className="fi-folder" style={{ marginRight: 4 }} /> {selecting ? "Abriendo..." : "Seleccionar carpeta"}
+              </button>
+            </div>
+          </div>
         </div>
-      )}
-      <AnimatePresence>
-        {toast.visible && (
-          <motion.div
-            className="callout success"
-            style={{
-              position: "fixed",
-              bottom: 24,
-              right: 24,
-              margin: 0,
-              borderRadius: 0,
-              minWidth: 220,
-              maxWidth: 400,
-              zIndex: 1000,
-              fontSize: 16,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-            }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.25 }}
-          >
-            {toast.message}
-          </motion.div>
+        <div style={{ marginTop: 12 }}>
+          <button type="button" className="button warning" onClick={handleRestore}>
+            Restaurar original
+          </button>
+        </div>
+        <div style={{ marginTop: 16, fontSize: 12, color: "#888" }}>
+          Por defecto se utilizará <span style={{ fontFamily: "monospace" }}>{defaultWorkdir}</span>
+        </div>
+        {error && (
+          <div className="callout alert" style={{ marginTop: 16 }}>
+            {error}
+          </div>
         )}
-      </AnimatePresence>
-    </div>
+        <AnimatePresence>
+          {toast.visible && (
+            <motion.div
+              className="callout success"
+              style={{
+                position: "fixed",
+                bottom: 24,
+                right: 24,
+                margin: 0,
+                borderRadius: 0,
+                minWidth: 220,
+                maxWidth: 400,
+                zIndex: 1000,
+                fontSize: 16,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.25 }}
+            >
+              {toast.message}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
   );
 };
 
