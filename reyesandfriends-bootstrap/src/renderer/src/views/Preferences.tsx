@@ -88,7 +88,6 @@ const Preferences: React.FC = () => {
       </div>
 
       <div className="callout secondary" style={{ maxWidth: 900, margin: "2rem auto" }}>
-        <h4>Preferencias</h4>
         <div className="callout primary" style={{ marginBottom: 16 }}>
           <label>
             <b>Directorio de trabajo actual:</b>
