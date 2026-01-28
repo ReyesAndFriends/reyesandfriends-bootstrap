@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useApacheServerUtils from "./useApacheServerUtils";
 
 type ApacheConfig = {
   dominios: string;
@@ -286,6 +287,82 @@ function ConfirmDeleteModal({
   );
 }
 
+function ConfPreviewModal({
+  open,
+  onClose,
+  config,
+  onSave,
+}: {
+  open: boolean;
+  onClose: () => void;
+  config?: ApacheConfig;
+  onSave?: (filename: string, content: string) => void;
+}) {
+  const { generateApacheConf } = useApacheServerUtils();
+  const [filename, setFilename] = useState("");
+  const [content, setContent] = useState("");
+  useEffect(() => {
+    if (config) {
+      setFilename(`${config.dominios?.split(",")[0]?.replace(/\./g, "_") || "apache"}.conf`);
+      setContent(generateApacheConf(config));
+    }
+  }, [config, generateApacheConf, open]);
+  if (!open || !config) return null;
+  return (
+    <div className="modal-backdrop" style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      background: "rgba(0,0,0,0.3)", zIndex: 3000
+    }}>
+      <div className="modal" style={{
+        background: "#fff",
+        maxWidth: 700,
+        margin: "60px auto",
+        padding: 24,
+        position: "relative",
+        maxHeight: "90vh",
+        overflowY: "auto",
+        borderRadius: 6,
+      }}>
+        <h3 style={{ marginTop: 0 }}>Previsualización .conf</h3>
+        <div style={{ marginBottom: 12 }}>
+          <label>
+            Nombre del archivo:
+            <input
+              type="text"
+              value={filename}
+              onChange={e => setFilename(e.target.value)}
+              style={{ width: 300, marginLeft: 8 }}
+            />
+          </label>
+        </div>
+        <pre style={{
+          background: "#222",
+          color: "#fff",
+          padding: 16,
+          borderRadius: 4,
+          maxHeight: 350,
+          overflow: "auto",
+          fontSize: 14
+        }}>{content}</pre>
+        <div style={{ marginTop: 24, textAlign: "right" }}>
+          <button className="button secondary" type="button" onClick={onClose}>Cerrar</button>
+          <button
+            className="button primary"
+            type="button"
+            style={{ marginLeft: 8 }}
+            onClick={() => {
+              if (onSave) onSave(filename, content);
+              onClose();
+            }}
+          >
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ApacheView() {
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const [rows, setRows] = useState<any[]>([]);
@@ -308,7 +385,12 @@ function ApacheView() {
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       const table = document.getElementById("apache-table");
-      if (table && !table.contains(e.target as Node)) {
+      const generarBtn = document.getElementById("generar-conf-btn");
+      if (
+        table &&
+        !table.contains(e.target as Node) &&
+        (!generarBtn || !generarBtn.contains(e.target as Node))
+      ) {
         setSelectedRow(null);
       }
     }
@@ -339,6 +421,9 @@ function ApacheView() {
       setSelectedRow(null);
     }
   };
+
+  const [confModalOpen, setConfModalOpen] = useState(false);
+  const [confPreviewConfig, setConfPreviewConfig] = useState<ApacheConfig | undefined>(undefined);
 
   return (
     <div>
@@ -482,7 +567,18 @@ function ApacheView() {
           </button>
         </div>
         <div className="cell shrink">
-          <button className="button secondary" type="button" >
+          <button
+            id="generar-conf-btn"
+            className="button secondary"
+            type="button"
+            onClick={() => {
+              if (selectedRow !== null) {
+                setConfPreviewConfig(rows[selectedRow]);
+                setConfModalOpen(true);
+              }
+            }}
+            disabled={selectedRow === null}
+          >
             Generar .conf
           </button>
         </div>
@@ -502,6 +598,15 @@ function ApacheView() {
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDelete}
+      />
+
+      <ConfPreviewModal
+        open={confModalOpen}
+        onClose={() => setConfModalOpen(false)}
+        config={confPreviewConfig}
+        onSave={(filename, content) => {
+          console.log("Guardar archivo:", filename, content);
+        }}
       />
     </div>
   );
