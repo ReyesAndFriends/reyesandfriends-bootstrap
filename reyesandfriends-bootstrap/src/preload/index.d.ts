@@ -10,5 +10,12 @@ declare global {
       add: (server: any) => Promise<any[]>
       removeAt: (index: number) => Promise<any[]>
     }
+    settingsAPI: {
+      getWorkdir: () => Promise<string>
+      setWorkdir: (path: string) => Promise<void>
+      selectWorkdir: () => Promise<string | null>
+      getDefaultWorkdir: () => Promise<string>
+      openConfigDir: () => Promise<void>
+    }
   }
 }

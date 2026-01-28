@@ -358,8 +358,15 @@ function ApacheView() {
       </div>
 
       <div className="grid-x" style={{ marginTop: 32 }}>
-        <div className="cell small-12" style={{ padding: "0 32px" }}>
+        <div className="cell small-12" style={{ padding: "0 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <strong style={{ fontSize: 16 }}>Configuraciones</strong>
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() => window.settingsAPI?.openConfigDir()}
+          >
+            Abrir directorio de configuraciones
+          </button>
         </div>
       </div>
 

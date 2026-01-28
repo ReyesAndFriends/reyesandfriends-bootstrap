@@ -1,4 +1,4 @@
-import { ipcMain, dialog } from "electron";
+import { ipcMain, dialog, shell } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -118,4 +118,15 @@ ipcMain.handle("apacheServers:removeAt", async (_event, index: number) => {
     writeApacheServers(servers);
   }
   return servers;
+});
+
+// Al final de los handlers IPC, agregar:
+ipcMain.handle("settings:openConfigDir", async () => {
+  // Lee el workdir desde settings.json y abre ese directorio
+  const config = readConfig();
+  if (config.workdir && typeof config.workdir === "string") {
+    return shell.openPath(config.workdir);
+  }
+  // Si no existe, abre el directorio por defecto
+  return shell.openPath(getDefaultWorkdir());
 });

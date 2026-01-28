@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld("settingsAPI", {
   setWorkdir: (path: string) => ipcRenderer.invoke("settings:setWorkdir", path),
   selectWorkdir: () => ipcRenderer.invoke("settings:selectWorkdir"),
   getDefaultWorkdir: () => ipcRenderer.invoke("settings:getDefaultWorkdir"),
+  openConfigDir: () => ipcRenderer.invoke("settings:openConfigDir"),
 });
 
 contextBridge.exposeInMainWorld("apacheServersAPI", {
