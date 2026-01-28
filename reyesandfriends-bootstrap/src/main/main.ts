@@ -33,6 +33,7 @@ function getDefaultWorkdir() {
 
 const configDir = getConfigDir();
 const configPath = path.join(configDir, "settings.json");
+const apacheServersPath = path.join(configDir, "apache_servers.json");
 
 function ensureConfig() {
   if (!fs.existsSync(configDir)) {
@@ -52,6 +53,22 @@ function readConfig() {
 function writeConfig(config: any) {
   ensureConfig();
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+}
+
+function ensureApacheServers() {
+  if (!fs.existsSync(apacheServersPath)) {
+    fs.writeFileSync(apacheServersPath, JSON.stringify([], null, 2));
+  }
+}
+
+function readApacheServers() {
+  ensureApacheServers();
+  return JSON.parse(fs.readFileSync(apacheServersPath, "utf-8"));
+}
+
+function writeApacheServers(data: any) {
+  ensureApacheServers();
+  fs.writeFileSync(apacheServersPath, JSON.stringify(data, null, 2));
 }
 
 // IPC handlers
@@ -76,4 +93,29 @@ ipcMain.handle("settings:selectWorkdir", async () => {
   });
   if (result.canceled || result.filePaths.length === 0) return null;
   return result.filePaths[0];
+});
+
+// IPC handlers para Apache Servers
+ipcMain.handle("apacheServers:getAll", async () => {
+  return readApacheServers();
+});
+
+ipcMain.handle("apacheServers:saveAll", async (_event, data) => {
+  writeApacheServers(data);
+});
+
+ipcMain.handle("apacheServers:add", async (_event, server) => {
+  const servers = readApacheServers();
+  servers.push(server);
+  writeApacheServers(servers);
+  return servers;
+});
+
+ipcMain.handle("apacheServers:removeAt", async (_event, index: number) => {
+  const servers = readApacheServers();
+  if (index >= 0 && index < servers.length) {
+    servers.splice(index, 1);
+    writeApacheServers(servers);
+  }
+  return servers;
 });

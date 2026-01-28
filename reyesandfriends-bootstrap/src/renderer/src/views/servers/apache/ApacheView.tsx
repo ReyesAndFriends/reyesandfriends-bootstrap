@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-// Definición del tipo ApacheConfig
 type ApacheConfig = {
   dominios: string;
   http: boolean;
@@ -17,10 +16,12 @@ function ApacheConfigModal({
   open,
   onClose,
   initialData,
+  onSave,
 }: {
   open: boolean;
   onClose: () => void;
   initialData?: Partial<ApacheConfig>;
+  onSave?: (data: ApacheConfig) => void;
 }) {
   const [dominios, setDominios] = useState(initialData?.dominios ?? "");
   const [http, setHttp] = useState(initialData?.http ?? true);
@@ -31,6 +32,18 @@ function ApacheConfigModal({
   const [redirect, setRedirect] = useState(initialData?.redirect ?? false);
   const [isProxy, setIsProxy] = useState(initialData?.isProxy ?? false);
   const [proxyTarget, setProxyTarget] = useState(initialData?.proxyTarget ?? "");
+
+  useEffect(() => {
+    setDominios(initialData?.dominios ?? "");
+    setHttp(initialData?.http ?? true);
+    setHttps(initialData?.https ?? false);
+    setPath(initialData?.path ?? "/var/www/html");
+    setSsl(initialData?.ssl ?? "certbot");
+    setSslCustom(initialData?.sslCustom ?? "");
+    setRedirect(initialData?.redirect ?? false);
+    setIsProxy(initialData?.isProxy ?? false);
+    setProxyTarget(initialData?.proxyTarget ?? "");
+  }, [open, initialData]);
 
   // Lógica de visibilidad
   const showSslCustom = ssl === "custom" && https;
@@ -128,7 +141,29 @@ function ApacheConfigModal({
         </div>
         <div style={{ marginTop: 24, textAlign: "right" }}>
           <button className="button secondary" type="button" onClick={onClose}>Cerrar</button>
-
+          <button
+            className="button primary"
+            type="button"
+            style={{ marginLeft: 8 }}
+            onClick={() => {
+              if (onSave) {
+                onSave({
+                  dominios,
+                  http,
+                  https,
+                  path,
+                  ssl,
+                  sslCustom,
+                  redirect,
+                  isProxy,
+                  proxyTarget,
+                });
+              }
+              onClose();
+            }}
+          >
+            Guardar
+          </button>
         </div>
       </div>
     </div>
@@ -137,42 +172,90 @@ function ApacheConfigModal({
 
 // --- Fin del modal ---
 
+function ConfirmDeleteModal({
+  open,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div className="modal-backdrop" style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      background: "rgba(0,0,0,0.3)", zIndex: 2000
+    }}>
+      <div className="modal" style={{
+        background: "#fff",
+        maxWidth: 380,
+        margin: "120px auto",
+        padding: 24,
+        position: "relative"
+      }}>
+        <h4>¿Eliminar este registro?</h4>
+        <p>Esta acción no se puede deshacer.</p>
+        <div style={{ marginTop: 24, textAlign: "right" }}>
+          <button className="button secondary" type="button" onClick={onClose}>Cancelar</button>
+          <button
+            className="button alert"
+            type="button"
+            style={{ marginLeft: 8 }}
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ApacheView() {
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
+  const [rows, setRows] = useState<any[]>([]);
+
+  useEffect(() => {
+    window.apacheServersAPI?.getAll().then((data) => {
+      setRows(data);
+    });
+  }, []);
 
   // Estado para modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEditData, setModalEditData] = useState<Partial<ApacheConfig> | undefined>(undefined);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
-  const rows = [
-    {
-      dominios: "ejemplo.com, www.ejemplo.com",
-      http: "80",
-      https: "443",
-      path: "/var/www/ejemplo",
-      proxy: "proxy_pass http://localhost:3000",
-      ssl: "Sí",
-      redirect: "301 → https",
-    },
-    {
-      dominios: "test.local",
-      http: "8080",
-      https: "—",
-      path: "/srv/test",
-      proxy: "—",
-      ssl: "No",
-      redirect: "No",
-    },
-    {
-      dominios: "demo.org",
-      http: "80",
-      https: "443",
-      path: "/home/demo/public",
-      proxy: "proxy_pass http://127.0.0.1:8081",
-      ssl: "Sí",
-      redirect: "302 → https",
-    },
-  ];
+  // Estado para el modal de eliminación
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const handleSave = async (data: ApacheConfig) => {
+    if (editIndex === null) {
+      // Crear nuevo
+      const newRows = await window.apacheServersAPI.add(data);
+      setRows(newRows);
+    } else {
+      // Editar existente
+      const updatedRows = [...rows];
+      updatedRows[editIndex] = data;
+      await window.apacheServersAPI.saveAll(updatedRows);
+      setRows(updatedRows);
+    }
+    setEditIndex(null);
+    setSelectedRow(null);
+  };
+
+  const handleDelete = async () => {
+    if (selectedRow !== null) {
+      const newRows = await window.apacheServersAPI.removeAt(selectedRow);
+      setRows(newRows);
+      setSelectedRow(null);
+    }
+  };
 
   return (
     <div>
@@ -223,29 +306,37 @@ function ApacheView() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row, idx) => (
-                  <tr
-                    key={idx}
-                    onClick={() => setSelectedRow(idx)}
-                    style={
-                      selectedRow === idx
-                        ? {
-                            background: "#1976d2",
-                            color: "#fff",
-                            cursor: "pointer",
-                          }
-                        : { cursor: "pointer" }
-                    }
-                  >
-                    <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.dominios}</td>
-                    <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.http}</td>
-                    <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.https}</td>
-                    <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.path}</td>
-                    <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.proxy}</td>
-                    <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.ssl}</td>
-                    <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.redirect}</td>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: "center", color: "#888" }}>
+                      No hay configuraciones registradas.
+                    </td>
                   </tr>
-                ))}
+                ) : (
+                  rows.map((row, idx) => (
+                    <tr
+                      key={idx}
+                      onClick={() => setSelectedRow(idx)}
+                      style={
+                        selectedRow === idx
+                          ? {
+                              background: "#1976d2",
+                              color: "#fff",
+                              cursor: "pointer",
+                            }
+                          : { cursor: "pointer" }
+                      }
+                    >
+                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.dominios}</td>
+                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.http ? "80" : "—"}</td>
+                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.https ? "443" : "—"}</td>
+                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.path}</td>
+                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.isProxy ? `proxy_pass http://${row.proxyTarget}` : "—"}</td>
+                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.https ? "Sí" : "No"}</td>
+                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.redirect ? "301 → https" : "No"}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -259,6 +350,7 @@ function ApacheView() {
             type="button"
             onClick={() => {
               setModalEditData(undefined);
+              setEditIndex(null);
               setModalOpen(true);
             }}
           >
@@ -271,26 +363,24 @@ function ApacheView() {
             disabled={selectedRow === null}
             onClick={() => {
               if (selectedRow !== null) {
-                // Mapear datos de la fila seleccionada al formato del modal
                 const row = rows[selectedRow];
-                setModalEditData({
-                  dominios: row.dominios,
-                  http: row.http === "80",
-                  https: row.https === "443",
-                  path: row.path,
-                  ssl: row.ssl === "Sí" ? "certbot" : "snakeoil",
-                  sslCustom: "",
-                  redirect: row.redirect !== "No",
-                  isProxy: row.proxy !== "—",
-                  proxyTarget: row.proxy !== "—" ? (row.proxy.match(/http:\/\/(.+)/)?.[1] ?? "") : "",
-                });
+                setModalEditData({ ...row });
+                setEditIndex(selectedRow);
                 setModalOpen(true);
               }
             }}
           >
             Editar
           </button>
-          <button className="button alert" type="button"  style={{ marginLeft: 8 }}>Eliminar</button>
+          <button
+            className="button alert"
+            type="button"
+            style={{ marginLeft: 8 }}
+            disabled={selectedRow === null}
+            onClick={() => setDeleteModalOpen(true)}
+          >
+            Eliminar
+          </button>
           <button className="button secondary" type="button"  style={{ marginLeft: 8 }}>Directorio del .conf</button>
         </div>
         <div className="cell shrink">
@@ -302,8 +392,18 @@ function ApacheView() {
 
       <ApacheConfigModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setEditIndex(null);
+        }}
         initialData={modalEditData}
+        onSave={handleSave}
+      />
+
+      <ConfirmDeleteModal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleDelete}
       />
     </div>
   );
