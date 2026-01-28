@@ -2,6 +2,7 @@ import { ipcMain, dialog, shell } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import * as fsp from "fs/promises";
 
 declare global {
   interface Window {
@@ -129,4 +130,25 @@ ipcMain.handle("settings:openConfigDir", async () => {
   }
   // Si no existe, abre el directorio por defecto
   return shell.openPath(getDefaultWorkdir());
+});
+
+// NUEVO: Guardar archivo .conf en el directorio seleccionado
+ipcMain.handle("apacheServers:saveConfFile", async (_event, filename: string, content: string, saveDir: string | null) => {
+  try {
+    let targetDir = saveDir;
+    if (!targetDir) {
+      // Si no se especifica, usar workdir/http-configs/apache
+      const config = readConfig();
+      targetDir = config.workdir
+        ? path.join(config.workdir, "http-configs", "apache")
+        : path.join(getDefaultWorkdir(), "http-configs", "apache");
+    }
+    // Crear el directorio si no existe
+    await fsp.mkdir(targetDir, { recursive: true });
+    const filePath = path.join(targetDir, filename);
+    await fsp.writeFile(filePath, content, "utf-8");
+    return { success: true, filePath };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
+  }
 });

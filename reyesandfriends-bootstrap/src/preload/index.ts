@@ -13,4 +13,9 @@ contextBridge.exposeInMainWorld("apacheServersAPI", {
   saveAll: (data: any) => ipcRenderer.invoke("apacheServers:saveAll", data),
   add: (server: any) => ipcRenderer.invoke("apacheServers:add", server),
   removeAt: (index: number) => ipcRenderer.invoke("apacheServers:removeAt", index),
+  saveConfFile: (
+    filename: string,
+    content: string,
+    saveDir: string | null
+  ) => ipcRenderer.invoke("apacheServers:saveConfFile", filename, content, saveDir),
 });

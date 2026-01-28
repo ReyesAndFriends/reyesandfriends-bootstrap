@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import useApacheServerUtils from "./useApacheServerUtils";
+import { AnimatePresence, motion } from "framer-motion";
 
 type ApacheConfig = {
   dominios: string;
@@ -19,7 +20,6 @@ function ApacheConfigModal({
   open,
   onClose,
   initialData,
-  onSave,
 }: {
   open: boolean;
   onClose: () => void;
@@ -238,32 +238,6 @@ function ApacheConfigModal({
         )}
         <div style={{ marginTop: 24, textAlign: "right" }}>
           <button className="button secondary" type="button" onClick={onClose}>Cerrar</button>
-          <button
-            className="button primary"
-            type="button"
-            style={{ marginLeft: 8 }}
-            disabled={!!error}
-            onClick={() => {
-              if (onSave && !error) {
-                onSave({
-                  dominios,
-                  http,
-                  https,
-                  path,
-                  ssl,
-                  sslCustomCert: ssl === "custom" && https ? sslCustomCert : undefined,
-                  sslCustomKey: ssl === "custom" && https ? sslCustomKey : undefined,
-                  sslCustom: ssl === "custom" && https ? `${sslCustomCert}::${sslCustomKey}` : undefined,
-                  redirect,
-                  isProxy,
-                  proxyTarget,
-                });
-                onClose();
-              }
-            }}
-          >
-            Guardar
-          </button>
         </div>
       </div>
     </div>
@@ -321,18 +295,40 @@ function ConfPreviewModal({
   open: boolean;
   onClose: () => void;
   config?: ApacheConfig;
-  onSave?: (filename: string, content: string) => void;
+  onSave?: (filename: string, content: string, saveDir: string | null) => Promise<boolean | void>;
 }) {
   const { generateApacheConf } = useApacheServerUtils();
   const [filename, setFilename] = useState("");
   const [content, setContent] = useState("");
+  const [saveOption, setSaveOption] = useState<"default" | "custom">("default");
+  const [customPath, setCustomPath] = useState<string | null>(null);
+  const [workdir, setWorkdir] = useState<string>("");
+  const [defaultSaveDir, setDefaultSaveDir] = useState<string>("");
+
   useEffect(() => {
     if (config) {
-      setFilename(`${config.dominios?.split(",")[0]?.replace(/\./g, "_") || "apache"}.conf`);
+      const firstDomain = config.dominios?.split(",")[0]?.trim() || "apache";
+      setFilename(`${firstDomain.replace(/\./g, "_")}.conf`);
       setContent(generateApacheConf(config));
     }
   }, [config, generateApacheConf, open]);
+
+  useEffect(() => {
+    window.settingsAPI?.getWorkdir().then((dir) => {
+      setWorkdir(dir);
+      setDefaultSaveDir(`${dir}/http-configs/apache`);
+    });
+    setSaveOption("default");
+    setCustomPath(null);
+  }, [open]);
+
+  const handleChooseCustomPath = async () => {
+    const selected = await window.settingsAPI?.selectWorkdir();
+    if (selected) setCustomPath(selected);
+  };
+
   if (!open || !config) return null;
+
   return (
     <div className="modal-backdrop" style={{
       position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
@@ -341,14 +337,40 @@ function ConfPreviewModal({
       <div className="modal" style={{
         background: "#fff",
         maxWidth: 700,
-        margin: "60px auto",
+        margin: "40px auto",
         padding: 24,
         position: "relative",
-        maxHeight: "90vh",
+        maxHeight: "95vh",
+        minHeight: 600,
         overflowY: "auto",
         borderRadius: 6,
+        display: "flex",
+        flexDirection: "column"
       }}>
         <h3 style={{ marginTop: 0 }}>Previsualización .conf</h3>
+        <div style={{ marginBottom: 16 }}>
+          <fieldset style={{ border: "none", padding: 0, margin: 0 }}>
+            <legend style={{ fontWeight: 600, fontSize: 15, marginBottom: 8 }}>¿Dónde guardar?</legend>
+            <label style={{ display: "block", marginBottom: 6 }}>
+              <input
+                type="radio"
+                checked={saveOption === "default"}
+                onChange={() => setSaveOption("default")}
+                style={{ marginRight: 6 }}
+              />
+              Guardar en <span style={{ fontFamily: "monospace" }}>{defaultSaveDir}</span>
+            </label>
+            <label style={{ display: "block", marginBottom: 6 }}>
+              <input
+                type="radio"
+                checked={saveOption === "custom"}
+                onChange={() => setSaveOption("custom")}
+                style={{ marginRight: 6 }}
+              />
+              Elegir otro lugar
+            </label>
+          </fieldset>
+        </div>
         <div style={{ marginBottom: 12 }}>
           <label>
             Nombre del archivo:
@@ -360,6 +382,21 @@ function ConfPreviewModal({
             />
           </label>
         </div>
+        {saveOption === "custom" && (
+          <div style={{ marginBottom: 12 }}>
+            <button
+              className="button secondary"
+              type="button"
+              onClick={handleChooseCustomPath}
+              style={{ marginRight: 8 }}
+            >
+              Elegir carpeta destino...
+            </button>
+            <span style={{ fontSize: 13, color: "#888" }}>
+              {customPath ? customPath : "No se ha seleccionado carpeta"}
+            </span>
+          </div>
+        )}
         <pre style={{
           background: "#222",
           color: "#fff",
@@ -367,17 +404,34 @@ function ConfPreviewModal({
           borderRadius: 4,
           maxHeight: 350,
           overflow: "auto",
-          fontSize: 14
+          fontSize: 14,
+          marginBottom: 16,
+          flex: "1 1 auto"
         }}>{content}</pre>
-        <div style={{ marginTop: 24, textAlign: "right" }}>
-          <button className="button secondary" type="button" onClick={onClose}>Cerrar</button>
+        <div style={{ marginTop: 16, textAlign: "right" }}>
+          <button
+            className="button secondary"
+            type="button"
+            onClick={onClose}
+            style={{ marginRight: 8 }}
+          >
+            Cancelar
+          </button>
           <button
             className="button primary"
             type="button"
-            style={{ marginLeft: 8 }}
-            onClick={() => {
-              if (onSave) onSave(filename, content);
-              onClose();
+            disabled={
+              (saveOption === "custom" && !customPath) ||
+              !filename.trim()
+            }
+            onClick={async () => {
+              if (onSave) {
+                await onSave(
+                  filename,
+                  content,
+                  saveOption === "default" ? defaultSaveDir : customPath || null
+                );
+              }
             }}
           >
             Guardar
@@ -403,6 +457,14 @@ function ApacheView() {
   // Modal de preview .conf
   const [confModalOpen, setConfModalOpen] = useState(false);
   const [confPreviewConfig, setConfPreviewConfig] = useState<ApacheConfig | undefined>(undefined);
+
+  // Toast animado
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type?: "success" | "error" }>({ visible: false, message: "" });
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast({ visible: false, message: "", type }), 3000);
+  };
 
   useEffect(() => {
     window.apacheServersAPI?.getAll().then((data) => {
@@ -646,10 +708,46 @@ function ApacheView() {
         open={confModalOpen}
         onClose={() => setConfModalOpen(false)}
         config={confPreviewConfig}
-        onSave={(filename, content) => {
-          console.log("Guardar archivo:", filename, content);
+        onSave={async (filename, content, saveDir) => {
+          const res = await window.apacheServersAPI.saveConfFile(filename, content, saveDir);
+          if (res.success) {
+            showToast(`Archivo guardado en:\n${res.filePath}`, "success");
+            setConfModalOpen(false);
+            return true;
+          } else {
+            showToast(`Error al guardar archivo:\n${res.error}`, "error");
+            return false;
+          }
         }}
       />
+
+      {/* Toast animado */}
+      <AnimatePresence>
+        {toast.visible && (
+          <motion.div
+            className={`callout ${toast.type === "error" ? "alert" : "success"}`}
+            style={{
+              position: "fixed",
+              bottom: 24,
+              right: 24,
+              margin: 0,
+              borderRadius: 0,
+              minWidth: 220,
+              maxWidth: 400,
+              zIndex: 1000,
+              fontSize: 16,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+              whiteSpace: "pre-line",
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.25 }}
+          >
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
