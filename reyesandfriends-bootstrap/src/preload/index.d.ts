@@ -10,8 +10,8 @@ declare global {
       setWorkdir: (path: string) => Promise<void>;
       selectWorkdir: () => Promise<string | null>;
       getDefaultWorkdir: () => Promise<string>;
-      openApacheConfigDir: () => Promise<void>;
-      openNginxConfigDir: () => Promise<void>;
+      openApacheConfigDir: () => Promise<string>;
+      openNginxConfigDir: () => Promise<string>;
     };
 
     apacheServersAPI: {

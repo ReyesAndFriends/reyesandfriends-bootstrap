@@ -97,7 +97,7 @@ function ApacheView() {
           <button
             className="button secondary"
             type="button"
-            onClick={() => window.settingsAPI?.openConfigDir()}
+            onClick={() => window.settingsAPI?.openApacheConfigDir()}
           >
             Abrir directorio de configuraciones
           </button>
