@@ -7,6 +7,8 @@ import Databases from '../views/Databases'
 import Preferences from '../views/Preferences'
 import About from '../views/About'
 
+import ApacheView from '@renderer/views/servers/apache/ApacheView'
+
 const pageVariants = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
@@ -47,6 +49,22 @@ const AppRoutes = () => {
             </motion.div>
           }
         />
+
+        <Route
+          path="/http-servers/apache"
+          element={
+            <motion.div
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: "tween", duration: 0.2 }}
+            >
+              <ApacheView />
+            </motion.div>
+          }
+        />
+
         <Route
           path="/databases"
           element={
