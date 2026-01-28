@@ -10,6 +10,7 @@ declare global {
       add: (server: any) => Promise<any[]>;
       removeAt: (index: number) => Promise<any[]>;
       saveConfFile: (filename: string, content: string, saveDir: string | null) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+      fileExists: (filename: string, saveDir: string | null) => Promise<boolean>;
     };
     settingsAPI: {
       getWorkdir: () => Promise<string>;

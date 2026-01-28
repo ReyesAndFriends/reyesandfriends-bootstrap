@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import useApacheServerUtils from "./useApacheServerUtils";
 import { AnimatePresence, motion } from "framer-motion";
+import React from "react";
 
 type ApacheConfig = {
   dominios: string;
@@ -442,6 +443,53 @@ function ConfPreviewModal({
   );
 }
 
+function OverwriteModal({
+  open,
+  onClose,
+  onConfirm,
+  filePath,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  filePath: string;
+}) {
+  if (!open) return null;
+  return (
+    <div className="modal-backdrop" style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      background: "rgba(0,0,0,0.3)", zIndex: 4000
+    }}>
+      <div className="modal" style={{
+        background: "#fff",
+        maxWidth: 420,
+        margin: "120px auto",
+        padding: 24,
+        position: "relative",
+        borderRadius: 6,
+      }}>
+        <h4>El archivo ya existe</h4>
+        <p>
+          Ya existe un archivo en:<br />
+          <span style={{ fontFamily: "monospace", fontSize: 13 }}>{filePath}</span>
+        </p>
+        <p>¿Deseas sobreescribirlo?</p>
+        <div style={{ marginTop: 24, textAlign: "right" }}>
+          <button className="button secondary" type="button" onClick={onClose}>Cancelar</button>
+          <button
+            className="button alert"
+            type="button"
+            style={{ marginLeft: 8 }}
+            onClick={onConfirm}
+          >
+            Sobrescribir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ApacheView() {
   const [rows, setRows] = useState<any[]>([]);
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
@@ -457,6 +505,16 @@ function ApacheView() {
   // Modal de preview .conf
   const [confModalOpen, setConfModalOpen] = useState(false);
   const [confPreviewConfig, setConfPreviewConfig] = useState<ApacheConfig | undefined>(undefined);
+
+  // Estado para modal de sobreescritura
+  const [overwriteModal, setOverwriteModal] = useState<{
+    open: boolean;
+    filename: string;
+    content: string;
+    saveDir: string | null;
+    filePath: string;
+    resolve?: (proceed: boolean) => void;
+  }>({ open: false, filename: "", content: "", saveDir: null, filePath: "" });
 
   // Toast animado
   const [toast, setToast] = useState<{ visible: boolean; message: string; type?: "success" | "error" }>({ visible: false, message: "" });
@@ -709,15 +767,53 @@ function ApacheView() {
         onClose={() => setConfModalOpen(false)}
         config={confPreviewConfig}
         onSave={async (filename, content, saveDir) => {
-          const res = await window.apacheServersAPI.saveConfFile(filename, content, saveDir);
-          if (res.success) {
-            showToast(`Archivo guardado en:\n${res.filePath}`, "success");
-            setConfModalOpen(false);
-            return true;
-          } else {
-            showToast(`Error al guardar archivo:\n${res.error}`, "error");
-            return false;
+          // Comprobar si existe el archivo antes de guardar
+          const exists = await window.apacheServersAPI.fileExists(filename, saveDir);
+          let proceed = true;
+          let filePath = (saveDir || "") + "/" + filename;
+          if (exists) {
+            // Mostrar modal de sobreescritura y esperar confirmación
+            proceed = await new Promise<boolean>((resolve) => {
+              setOverwriteModal({
+                open: true,
+                filename,
+                content,
+                saveDir,
+                filePath,
+                resolve,
+              });
+            });
           }
+          if (proceed) {
+            const res = await window.apacheServersAPI.saveConfFile(filename, content, saveDir);
+            if (res.success) {
+              showToast(`Archivo guardado en:\n${res.filePath}`, "success");
+              setConfModalOpen(false);
+              return true;
+            } else {
+              showToast(`Error al guardar archivo:\n${res.error}`, "error");
+              return false;
+            }
+          }
+          // Si el usuario cancela, no guardar ni cerrar modal
+          return false;
+        }}
+      />
+
+      <OverwriteModal
+        open={overwriteModal.open}
+        filePath={overwriteModal.filePath}
+        onClose={() => {
+          setOverwriteModal((prev) => {
+            prev.resolve?.(false);
+            return { ...prev, open: false };
+          });
+        }}
+        onConfirm={() => {
+          setOverwriteModal((prev) => {
+            prev.resolve?.(true);
+            return { ...prev, open: false };
+          });
         }}
       />
 

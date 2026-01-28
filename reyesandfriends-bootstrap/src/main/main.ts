@@ -152,3 +152,20 @@ ipcMain.handle("apacheServers:saveConfFile", async (_event, filename: string, co
     return { success: false, error: err instanceof Error ? err.message : String(err) };
   }
 });
+
+ipcMain.handle("apacheServers:fileExists", async (_event, filename: string, saveDir: string | null) => {
+  let targetDir = saveDir;
+  if (!targetDir) {
+    const config = readConfig();
+    targetDir = config.workdir
+      ? path.join(config.workdir, "http-configs", "apache")
+      : path.join(getDefaultWorkdir(), "http-configs", "apache");
+  }
+  const filePath = path.join(targetDir, filename);
+  try {
+    await fsp.access(filePath, fs.constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+});

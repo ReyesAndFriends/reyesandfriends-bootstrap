@@ -18,4 +18,8 @@ contextBridge.exposeInMainWorld("apacheServersAPI", {
     content: string,
     saveDir: string | null
   ) => ipcRenderer.invoke("apacheServers:saveConfFile", filename, content, saveDir),
+  fileExists: (
+    filename: string,
+    saveDir: string | null
+  ) => ipcRenderer.invoke("apacheServers:fileExists", filename, saveDir),
 });
