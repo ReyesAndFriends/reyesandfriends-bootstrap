@@ -543,8 +543,10 @@ function ApacheView() {
                       <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.dominios}</td>
                       <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.http ? "80" : "—"}</td>
                       <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.https ? "443" : "—"}</td>
-                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.path}</td>
-                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.isProxy ? `proxy_pass http://${row.proxyTarget}` : "—"}</td>
+                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>
+                        {row.path && row.path.trim() ? row.path : "—"}
+                      </td>
+                      <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.isProxy ? `http://${row.proxyTarget}` : "—"}</td>
                       <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.https ? "Sí" : "No"}</td>
                       <td style={selectedRow === idx ? { color: "#fff" } : {}}>{row.redirect ? "301 → https" : "No"}</td>
                     </tr>
