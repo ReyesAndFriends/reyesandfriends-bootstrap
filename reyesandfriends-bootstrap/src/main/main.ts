@@ -123,13 +123,15 @@ ipcMain.handle("apacheServers:removeAt", async (_event, index: number) => {
 
 // Al final de los handlers IPC, agregar:
 ipcMain.handle("settings:openConfigDir", async () => {
-  // Lee el workdir desde settings.json y abre ese directorio
+  // Lee el workdir desde settings.json y abre el subdirectorio http-configs/apache
   const config = readConfig();
-  if (config.workdir && typeof config.workdir === "string") {
-    return shell.openPath(config.workdir);
-  }
-  // Si no existe, abre el directorio por defecto
-  return shell.openPath(getDefaultWorkdir());
+  let baseDir = config.workdir && typeof config.workdir === "string"
+    ? config.workdir
+    : getDefaultWorkdir();
+  const apacheDir = path.join(baseDir, "http-configs", "apache");
+  // Crear el directorio si no existe
+  await fsp.mkdir(apacheDir, { recursive: true });
+  return shell.openPath(apacheDir);
 });
 
 // NUEVO: Guardar archivo .conf en el directorio seleccionado
