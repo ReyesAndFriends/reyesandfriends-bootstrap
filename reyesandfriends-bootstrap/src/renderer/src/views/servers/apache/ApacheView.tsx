@@ -304,6 +304,18 @@ function ApacheView() {
   // Estado para el modal de eliminación
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
+  // Desactivar selección al hacer click fuera de la tabla
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const table = document.getElementById("apache-table");
+      if (table && !table.contains(e.target as Node)) {
+        setSelectedRow(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleSave = async (data: ApacheConfig) => {
     if (editIndex === null) {
       // Crear nuevo
@@ -355,6 +367,7 @@ function ApacheView() {
         <div className="cell small-12" style={{ padding: "0 32px" }}>
           <div className="table-scroll">
             <table
+              id="apache-table"
               className="unstriped"
               style={{
                 width: "100%",
@@ -452,7 +465,14 @@ function ApacheView() {
           >
             Eliminar
           </button>
-          <button className="button secondary" type="button"  style={{ marginLeft: 8 }}>Directorio del .conf</button>
+          <button
+            className="button secondary"
+            type="button"
+            style={{ marginLeft: 8 }}
+            disabled={selectedRow === null}
+          >
+            Directorio del .conf
+          </button>
         </div>
         <div className="cell shrink">
           <button className="button secondary" type="button" >
