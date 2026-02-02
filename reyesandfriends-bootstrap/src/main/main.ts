@@ -173,12 +173,17 @@ ipcMain.handle("nginxServers:removeAt", async (_event, index: number) => {
     if (firstDomain) {
       const config = readConfig();
       const baseDir = config.workdir ? config.workdir : getDefaultWorkdir();
-      const nginxDir = path.join(baseDir, "http-configs", "nginx");
-      const confFileName = `${firstDomain.replace(/\./g, "_")}.conf`;
+      const domainFolder = firstDomain.replace(/\./g, "_");
+      const nginxDir = path.join(baseDir, "http-configs", "nginx", domainFolder);
+      const confFileName = `${domainFolder}.conf`;
       const confFile = path.join(nginxDir, confFileName);
       try {
         if (fs.existsSync(confFile)) {
           await fsp.unlink(confFile);
+        }
+        // Eliminar la carpeta si está vacía
+        if (fs.existsSync(nginxDir) && (await fsp.readdir(nginxDir)).length === 0) {
+          await fsp.rmdir(nginxDir);
         }
       } catch (err) {}
     }
@@ -188,15 +193,31 @@ ipcMain.handle("nginxServers:removeAt", async (_event, index: number) => {
   return servers;
 });
 
-ipcMain.handle("nginxServers:saveConfFile", async (_event, filename: string, content: string, saveDir: string | null) => {
+ipcMain.handle("nginxServers:saveConfFile", async (_event, filename: string, content: string, saveDir: string | null, domains?: string | string[]) => {
   try {
     let targetDir = saveDir;
+    let domainFolder = "";
     if (!targetDir) {
+      // Si no se especifica, usar workdir/http-configs/nginx
       const config = readConfig();
       targetDir = config.workdir
         ? path.join(config.workdir, "http-configs", "nginx")
         : path.join(getDefaultWorkdir(), "http-configs", "nginx");
     }
+    // Si se pasa domains, crear subcarpeta
+    if (domains) {
+      let firstDomain = "";
+      if (typeof domains === "string") {
+        firstDomain = domains.split(",")[0].trim();
+      } else if (Array.isArray(domains) && domains.length > 0) {
+        firstDomain = String(domains[0]).trim();
+      }
+      if (firstDomain) {
+        domainFolder = firstDomain.replace(/\./g, "_");
+        targetDir = path.join(targetDir, domainFolder);
+      }
+    }
+    // Crear el directorio si no existe
     await fsp.mkdir(targetDir, { recursive: true });
     const filePath = path.join(targetDir, filename);
     await fsp.writeFile(filePath, content, "utf-8");
@@ -206,13 +227,26 @@ ipcMain.handle("nginxServers:saveConfFile", async (_event, filename: string, con
   }
 });
 
-ipcMain.handle("nginxServers:fileExists", async (_event, filename: string, saveDir: string | null) => {
+ipcMain.handle("nginxServers:fileExists", async (_event, filename: string, saveDir: string | null, domains?: string | string[]) => {
   let targetDir = saveDir;
+  let domainFolder = "";
   if (!targetDir) {
     const config = readConfig();
     targetDir = config.workdir
       ? path.join(config.workdir, "http-configs", "nginx")
       : path.join(getDefaultWorkdir(), "http-configs", "nginx");
+  }
+  if (domains) {
+    let firstDomain = "";
+    if (typeof domains === "string") {
+      firstDomain = domains.split(",")[0].trim();
+    } else if (Array.isArray(domains) && domains.length > 0) {
+      firstDomain = String(domains[0]).trim();
+    }
+    if (firstDomain) {
+      domainFolder = firstDomain.replace(/\./g, "_");
+      targetDir = path.join(targetDir, domainFolder);
+    }
   }
   const filePath = path.join(targetDir, filename);
   try {
@@ -346,14 +380,18 @@ ipcMain.handle("apacheServers:removeAt", async (_event, index: number) => {
       const baseDir = config.workdir
         ? config.workdir
         : getDefaultWorkdir();
-      const apacheDir = path.join(baseDir, "http-configs", "apache");
+      const domainFolder = firstDomain.replace(/\./g, "_");
+      const apacheDir = path.join(baseDir, "http-configs", "apache", domainFolder);
 
-      const confFileName = `${firstDomain.replace(/\./g, "_")}.conf`;
+      const confFileName = `${domainFolder}.conf`;
       const confFile = path.join(apacheDir, confFileName);
       try {
         if (fs.existsSync(confFile)) {
           await fsp.unlink(confFile);
-        } else {
+        }
+        // Eliminar la carpeta si está vacía
+        if (fs.existsSync(apacheDir) && (await fsp.readdir(apacheDir)).length === 0) {
+          await fsp.rmdir(apacheDir);
         }
       } catch (err) {
       }
@@ -363,7 +401,6 @@ ipcMain.handle("apacheServers:removeAt", async (_event, index: number) => {
   }
   return servers;
 });
-
 
 // Handler para abrir el directorio de configuraciones de Apache
 ipcMain.handle("settings:openApacheConfigDir", async () => {
@@ -388,15 +425,29 @@ ipcMain.handle("settings:openNginxConfigDir", async () => {
 });
 
 // Guardar archivo .conf en el directorio seleccionado
-ipcMain.handle("apacheServers:saveConfFile", async (_event, filename: string, content: string, saveDir: string | null) => {
+ipcMain.handle("apacheServers:saveConfFile", async (_event, filename: string, content: string, saveDir: string | null, domains?: string | string[]) => {
   try {
     let targetDir = saveDir;
+    let domainFolder = "";
     if (!targetDir) {
       // Si no se especifica, usar workdir/http-configs/apache
       const config = readConfig();
       targetDir = config.workdir
         ? path.join(config.workdir, "http-configs", "apache")
         : path.join(getDefaultWorkdir(), "http-configs", "apache");
+    }
+    // Si se pasa domains, crear subcarpeta
+    if (domains) {
+      let firstDomain = "";
+      if (typeof domains === "string") {
+        firstDomain = domains.split(",")[0].trim();
+      } else if (Array.isArray(domains) && domains.length > 0) {
+        firstDomain = String(domains[0]).trim();
+      }
+      if (firstDomain) {
+        domainFolder = firstDomain.replace(/\./g, "_");
+        targetDir = path.join(targetDir, domainFolder);
+      }
     }
     // Crear el directorio si no existe
     await fsp.mkdir(targetDir, { recursive: true });
@@ -408,13 +459,26 @@ ipcMain.handle("apacheServers:saveConfFile", async (_event, filename: string, co
   }
 });
 
-ipcMain.handle("apacheServers:fileExists", async (_event, filename: string, saveDir: string | null) => {
+ipcMain.handle("apacheServers:fileExists", async (_event, filename: string, saveDir: string | null, domains?: string | string[]) => {
   let targetDir = saveDir;
+  let domainFolder = "";
   if (!targetDir) {
     const config = readConfig();
     targetDir = config.workdir
       ? path.join(config.workdir, "http-configs", "apache")
       : path.join(getDefaultWorkdir(), "http-configs", "apache");
+  }
+  if (domains) {
+    let firstDomain = "";
+    if (typeof domains === "string") {
+      firstDomain = domains.split(",")[0].trim();
+    } else if (Array.isArray(domains) && domains.length > 0) {
+      firstDomain = String(domains[0]).trim();
+    }
+    if (firstDomain) {
+      domainFolder = firstDomain.replace(/\./g, "_");
+      targetDir = path.join(targetDir, domainFolder);
+    }
   }
   const filePath = path.join(targetDir, filename);
   try {

@@ -159,16 +159,32 @@ function NginxView() {
 				onClose={() => setConfModalOpen(false)}
 				config={confPreviewConfig}
 				onSave={async (filename, content, saveDir) => {
-					const exists = await window.nginxServersAPI.fileExists(filename, saveDir);
+					const exists = await window.nginxServersAPI.fileExists(
+						filename,
+						saveDir,
+						confPreviewConfig?.domains
+					);
 					let proceed = true;
-					let filePath = (saveDir || "") + "/" + filename;
+					let filePath =
+						((saveDir || "") +
+							(confPreviewConfig?.domains
+								? "/" + confPreviewConfig.domains.split(",")[0].trim().replace(/\./g, "_")
+								: "") +
+							"/" +
+							filename
+						).replace(/\/+/g, "/");
 					if (exists) {
 						proceed = await new Promise<boolean>((resolve) => {
 							setOverwriteModal({ open: true, filename, content, saveDir, filePath, resolve });
 						});
 					}
 					if (proceed) {
-						const res = await window.nginxServersAPI.saveConfFile(filename, content, saveDir);
+						const res = await window.nginxServersAPI.saveConfFile(
+							filename,
+							content,
+							saveDir,
+							confPreviewConfig?.domains
+						);
 						if (res.success) {
 							showToast(`Archivo guardado en:\n${res.filePath}`, "success");
 							setConfModalOpen(false);

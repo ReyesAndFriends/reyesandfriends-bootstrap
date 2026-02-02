@@ -28,8 +28,17 @@ declare global {
       saveAll: (data: any[]) => Promise<void>;
       add: (server: any) => Promise<any[]>;
       removeAt: (index: number) => Promise<any[]>;
-      saveConfFile: (filename: string, content: string, saveDir: string | null) => Promise<{ success: boolean; filePath?: string; error?: string }>;
-      fileExists: (filename: string, saveDir: string | null) => Promise<boolean>;
+      saveConfFile: (
+        filename: string,
+        content: string,
+        saveDir: string | null,
+        domains?: string | string[]
+      ) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+      fileExists: (
+        filename: string,
+        saveDir: string | null,
+        domains?: string | string[]
+      ) => Promise<boolean>;
     };
 
     nginxServersAPI: {
@@ -37,8 +46,17 @@ declare global {
       saveAll: (data: any[]) => Promise<void>;
       add: (server: any) => Promise<any[]>;
       removeAt: (index: number) => Promise<any[]>;
-      saveConfFile: (filename: string, content: string, saveDir: string | null) => Promise<{ success: boolean; filePath?: string; error?: string }>;
-      fileExists: (filename: string, saveDir: string | null) => Promise<boolean>;
+      saveConfFile: (
+        filename: string,
+        content: string,
+        saveDir: string | null,
+        domains?: string | string[]
+      ) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+      fileExists: (
+        filename: string,
+        saveDir: string | null,
+        domains?: string | string[]
+      ) => Promise<boolean>;
     };
 
     mysqlScriptsAPI: {

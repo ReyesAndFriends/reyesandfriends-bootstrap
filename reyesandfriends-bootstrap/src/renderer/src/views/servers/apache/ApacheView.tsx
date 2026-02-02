@@ -251,9 +251,20 @@ function ApacheView() {
         config={confPreviewConfig}
         onSave={async (filename, content, saveDir) => {
           // Comprobar si existe el archivo antes de guardar
-          const exists = await window.apacheServersAPI.fileExists(filename, saveDir);
+          const exists = await window.apacheServersAPI.fileExists(
+            filename,
+            saveDir,
+            confPreviewConfig?.domains
+          );
           let proceed = true;
-          let filePath = (saveDir || "") + "/" + filename;
+          let filePath =
+            ((saveDir || "") +
+              (confPreviewConfig?.domains
+                ? "/" + confPreviewConfig.domains.split(",")[0].trim().replace(/\./g, "_")
+                : "") +
+              "/" +
+              filename
+            ).replace(/\/+/g, "/");
           if (exists) {
             // Mostrar modal de sobreescritura y esperar confirmación
             proceed = await new Promise<boolean>((resolve) => {
@@ -268,7 +279,12 @@ function ApacheView() {
             });
           }
           if (proceed) {
-            const res = await window.apacheServersAPI.saveConfFile(filename, content, saveDir);
+            const res = await window.apacheServersAPI.saveConfFile(
+              filename,
+              content,
+              saveDir,
+              confPreviewConfig?.domains // <-- PASAR DOMAINS AQUÍ
+            );
             if (res.success) {
               showToast(`Archivo guardado en:\n${res.filePath}`, "success");
               setConfModalOpen(false);

@@ -34,12 +34,14 @@ contextBridge.exposeInMainWorld("apacheServersAPI", {
   saveConfFile: (
     filename: string,
     content: string,
-    saveDir: string | null
-  ) => ipcRenderer.invoke("apacheServers:saveConfFile", filename, content, saveDir),
+    saveDir: string | null,
+    domains?: string | string[]
+  ) => ipcRenderer.invoke("apacheServers:saveConfFile", filename, content, saveDir, domains),
   fileExists: (
     filename: string,
-    saveDir: string | null
-  ) => ipcRenderer.invoke("apacheServers:fileExists", filename, saveDir),
+    saveDir: string | null,
+    domains?: string | string[]
+  ) => ipcRenderer.invoke("apacheServers:fileExists", filename, saveDir, domains),
 });
 
 // Exponer Nginx Servers API
@@ -51,10 +53,12 @@ contextBridge.exposeInMainWorld("nginxServersAPI", {
   saveConfFile: (
     filename: string,
     content: string,
-    saveDir: string | null
-  ) => ipcRenderer.invoke("nginxServers:saveConfFile", filename, content, saveDir),
+    saveDir: string | null,
+    domains?: string | string[]
+  ) => ipcRenderer.invoke("nginxServers:saveConfFile", filename, content, saveDir, domains),
   fileExists: (
     filename: string,
-    saveDir: string | null
-  ) => ipcRenderer.invoke("nginxServers:fileExists", filename, saveDir),
+    saveDir: string | null,
+    domains?: string | string[]
+  ) => ipcRenderer.invoke("nginxServers:fileExists", filename, saveDir, domains),
 });
