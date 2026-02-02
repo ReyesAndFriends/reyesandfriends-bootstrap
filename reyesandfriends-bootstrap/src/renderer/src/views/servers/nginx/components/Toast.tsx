@@ -21,7 +21,7 @@ export default function Toast({
             margin: 0,
             borderRadius: 0,
             minWidth: 220,
-            maxWidth: 400,
+            maxWidth: 650,
             zIndex: 1000,
             fontSize: 16,
             boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
