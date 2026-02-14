@@ -13,15 +13,15 @@ function Home() {
       >
         <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
           <img
-        src="/icons/app_icon.png"
-        alt="Icono"
-        style={{ width: 80, height: "auto", marginRight: 16, background: 'transparent' }}
+            src="/icons/app_icon.png"
+            alt="Icono"
+            style={{ width: 80, height: "auto", marginRight: 16, background: 'transparent' }}
           />
           <div>
-        <h2 style={{ color: 'white', fontSize: 22, margin: 0 }}>Reyes&Friends - Bootstrap</h2>
-        <p className="lead" style={{ color: 'white', fontSize: 16, margin: 0 }}>
-          Un gestor de utilidades para desarrolladores y administradores de sistemas para una puesta a producción rápida.
-        </p>
+            <h2 style={{ color: 'white', fontSize: 22, margin: 0 }}>Reyes&Friends - Bootstrap</h2>
+            <p className="lead" style={{ color: 'white', fontSize: 16, margin: 0 }}>
+              Un gestor de utilidades para desarrolladores y administradores de sistemas para una puesta a producción rápida.
+            </p>
           </div>
         </div>
       </div>
@@ -74,6 +74,18 @@ function Home() {
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 'bold', fontSize: 18 }}>Bases de datos</div>
               <div style={{ color: '#555', fontSize: 14 }}>Herramientas para gestión y migración de bases de datos.</div>
+            </div>
+          </Link>
+
+          <Link to="/secret-keys" className="callout" style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+            <img
+              src="/icons/lock.svg"
+              alt="Claves secretas"
+              style={{ width: 40, height: 40, marginRight: 20 }}
+            />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 'bold', fontSize: 18 }}>Claves secretas</div>
+              <div style={{ color: '#555', fontSize: 14 }}>Gestiona y genera claves secretas para tus aplicaciones.</div>
             </div>
           </Link>
 

@@ -12,6 +12,8 @@ import NginxView from '@renderer/views/servers/nginx/NginxView'
 
 import MySQLView from '@renderer/views/databases/mysql/MySQLView'
 
+import SecretKeys from '@renderer/views/SecretKeys'
+
 const pageVariants = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
@@ -109,6 +111,21 @@ const AppRoutes = () => {
               transition={{ type: "tween", duration: 0.2 }}
             >
               <MySQLView />
+            </motion.div>
+          }
+        />
+
+        <Route
+          path="/secret-keys"
+          element={
+            <motion.div
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: "tween", duration: 0.2 }}
+            >
+              <SecretKeys />
             </motion.div>
           }
         />

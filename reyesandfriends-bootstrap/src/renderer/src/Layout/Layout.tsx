@@ -5,6 +5,7 @@ const sidebarButtons = [
   { label: "Inicio", icon: "/icons/folder.svg", route: "/" },
   { label: "Servidores HTTP", icon: "/icons/network-server.svg", route: "/http-servers" },
   { label: "Bases de datos", icon: "/icons/sqlitebrowser.svg", route: "/databases" },
+  { label: "Claves secretas", icon: "/icons/lock.svg", route: "/secret-keys" },
   { label: "Preferencias", icon: "/icons/preferences-desktop-icons.svg", route: "/preferences" },
   { label: "Acerca de", icon: "/icons/help-about.svg", route: "/about" },
 ];
@@ -56,7 +57,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               msUserSelect: "none",
             }}
           >
-            <h5 style={{ color: "#fff", margin: 0, fontSize: "1rem", lineHeight: "1.1" }}>Reyes&Friends<br />Bootstrap</h5>
           </div>
 
           {sidebarButtons.map((btn) => (
