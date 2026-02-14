@@ -3,7 +3,7 @@ import { ApacheConfig } from "./types";
 import ApacheConfigModal from "./components/ApacheConfigModal";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import ConfPreviewModal from "./components/ConfPreviewModal";
-import OverwriteModal from "./components/OverwriteModal";
+import OverwriteModal from "@renderer/components/HttpConfigs/OverWriteModal";
 import Toast from "@renderer/components/Toast";
 
 function ApacheView() {

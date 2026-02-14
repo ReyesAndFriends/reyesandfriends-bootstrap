@@ -3,7 +3,7 @@ import { NginxConfig } from "./types";
 import NginxConfigModal from "./components/NginxConfigModal";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import ConfPreviewModal from "./components/ConfPreviewModal";
-import OverwriteModal from "./components/OverwriteModal";
+import OverwriteModal from "@renderer/components/HttpConfigs/OverWriteModal";
 import Toast from "@renderer/components/Toast";
 
 function NginxView() {
