@@ -282,7 +282,11 @@ function getConfigDir() {
 
 function getDefaultWorkdir() {
   const home = os.homedir();
-  return path.join(home, "ReyesAndFriendsBootstrap");
+  if (os.platform() === "win32") {
+    return path.join(home, "Documents", "ReyesAndFriendsBootstrap");
+  } else {
+    return path.join(home, "ReyesAndFriendsBootstrap");
+  }
 }
 
 const configPath = path.join(configDir, "settings.json");
