@@ -102,6 +102,21 @@ function Home() {
           </Link>
         </div>
       </div>
+
+      <div
+        className="callout warning"
+        style={{
+          marginTop: 60,
+          marginBottom: 20,
+          fontSize: 16,
+          maxWidth: 900,
+          marginLeft: 'auto',
+          marginRight: 'auto'
+        }}
+      >
+        <strong>Nota importante:</strong> Esta aplicación es una herramienta de apoyo para desarrolladores y administradores de sistemas, puede contener errores o generar configuraciones que requieran ajustes adicionales. Nunca dependas completamente de las configuraciones generadas sin revisarlas cuidadosamente. <br /><br /> Siempre verifica y ajusta las configuraciones según las necesidades específicas de tu entorno antes de implementarlas en producción!
+      </div>
+
     </>
   );
 }
