@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import MySQLScriptModal from "./components/MySQLScriptModal";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import SQLPreviewModal from "./components/SQLPreviewModal";
-import OverwriteModal from "./components/OverwriteModal";
+import OverwriteModal from "@renderer/components/DatabaseConfigs/OverWriteModal";
 import Toast from "@renderer/components/Toast";
 import { generateMySQLScript } from "./useMySQLDatabaseUtils";
 
