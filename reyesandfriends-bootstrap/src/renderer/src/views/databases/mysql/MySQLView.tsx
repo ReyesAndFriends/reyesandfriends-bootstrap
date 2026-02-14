@@ -3,7 +3,7 @@ import MySQLScriptModal from "./components/MySQLScriptModal";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import SQLPreviewModal from "./components/SQLPreviewModal";
 import OverwriteModal from "./components/OverwriteModal";
-import Toast from "./components/Toast";
+import Toast from "@renderer/components/Toast";
 import { generateMySQLScript } from "./useMySQLDatabaseUtils";
 
 function MySQLView() {

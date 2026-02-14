@@ -25,7 +25,9 @@ export default function Toast({
             zIndex: 1000,
             fontSize: 16,
             boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-            whiteSpace: "pre-line",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
           }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

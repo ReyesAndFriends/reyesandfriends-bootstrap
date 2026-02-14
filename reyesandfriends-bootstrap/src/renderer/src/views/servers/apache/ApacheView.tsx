@@ -4,7 +4,7 @@ import ApacheConfigModal from "./components/ApacheConfigModal";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import ConfPreviewModal from "./components/ConfPreviewModal";
 import OverwriteModal from "./components/OverwriteModal";
-import Toast from "./components/Toast";
+import Toast from "@renderer/components/Toast";
 
 function ApacheView() {
   const [rows, setRows] = useState<ApacheConfig[]>([]);
