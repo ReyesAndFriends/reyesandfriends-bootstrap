@@ -27,37 +27,37 @@ function useNginxServerUtils() {
 		if (config.http) {
 			if (config.redirect && config.https) {
 				conf += `server {
-		listen 80;
-		server_name ${serverName}${serverAlias ? " " + serverAlias : ""};
-		return 301 https://${serverName}$request_uri;
-		access_log /var/log/nginx/${serverName}_access.log;
-		error_log /var/log/nginx/${serverName}_error.log;
+	listen 80;
+	server_name ${serverName}${serverAlias ? " " + serverAlias : ""};
+	return 301 https://${serverName}$request_uri;
+	access_log /var/log/nginx/${serverName}_access.log;
+	error_log /var/log/nginx/${serverName}_error.log;
 }
 
 `;
 			} else {
 				conf += `server {
-		listen 80;
-		server_name ${serverName}${serverAlias ? " " + serverAlias : ""};
-		${proxy
+	listen 80;
+	server_name ${serverName}${serverAlias ? " " + serverAlias : ""};
+	${proxy
 			? `
-		location / {
-			proxy_pass http://${proxyTarget};
-			proxy_set_header Host $host;
-			proxy_set_header X-Real-IP $remote_addr;
-			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-			proxy_set_header X-Forwarded-Proto $scheme;
-		}
-		`
+	location / {
+		proxy_pass http://${proxyTarget};
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+	}
+	`
 			: `
-		root ${docRoot};
-		index index.html index.htm;
-		location / {
-			try_files $uri $uri/ =404;
-		}
-		`}
-		access_log /var/log/nginx/${serverName}_access.log;
-		error_log /var/log/nginx/${serverName}_error.log;
+	root ${docRoot};
+	index index.html index.htm;
+	location / {
+		try_files $uri $uri/ =404;
+	}
+	`}
+	access_log /var/log/nginx/${serverName}_access.log;
+	error_log /var/log/nginx/${serverName}_error.log;
 }
 
 `;
@@ -79,31 +79,31 @@ function useNginxServerUtils() {
 				sslKey = config.sslCustomKey || "";
 			}
 			conf += `server {
-		listen 443 ssl;
-		server_name ${serverName}${serverAlias ? " " + serverAlias : ""};
-		ssl_certificate ${sslCert};
-		ssl_certificate_key ${sslKey};
-		ssl_protocols TLSv1.2 TLSv1.3;
-		ssl_ciphers HIGH:!aNULL:!MD5;
-		${proxy
+	listen 443 ssl;
+	server_name ${serverName}${serverAlias ? " " + serverAlias : ""};
+	ssl_certificate ${sslCert};
+	ssl_certificate_key ${sslKey};
+	ssl_protocols TLSv1.2 TLSv1.3;
+	ssl_ciphers HIGH:!aNULL:!MD5;
+	${proxy
 			? `
-		location / {
-			proxy_pass http://${proxyTarget};
-			proxy_set_header Host $host;
-			proxy_set_header X-Real-IP $remote_addr;
-			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-			proxy_set_header X-Forwarded-Proto $scheme;
-		}
-		`
+	location / {
+		proxy_pass http://${proxyTarget};
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+	}
+	`
 			: `
-		root ${docRoot};
-		index index.html index.htm;
-		location / {
-			try_files $uri $uri/ =404;
-		}
-		`}
-		access_log /var/log/nginx/${serverName}_ssl_access.log;
-		error_log /var/log/nginx/${serverName}_ssl_error.log;
+	root ${docRoot};
+	index index.html index.htm;
+	location / {
+		try_files $uri $uri/ =404;
+	}
+	`}
+	access_log /var/log/nginx/${serverName}_ssl_access.log;
+	error_log /var/log/nginx/${serverName}_ssl_error.log;
 }
 `;
 		}
