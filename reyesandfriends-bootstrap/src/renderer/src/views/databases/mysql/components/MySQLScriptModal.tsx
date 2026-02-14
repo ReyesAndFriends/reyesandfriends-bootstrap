@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 const PRESET_PRIVILEGES: Record<string, string> = {
-  produccion: "SELECT, INSERT, UPDATE, DELETE, CREATE, DROP",
+  produccion: "SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, TRIGGER, REFERENCES",
   desarrollo: "ALL PRIVILEGES",
   solo_lectura: "SELECT",
 };
