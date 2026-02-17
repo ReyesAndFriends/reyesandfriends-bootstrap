@@ -18,20 +18,18 @@ function ConfPreviewModal({
   const [content, setContent] = useState("");
   const [saveOption, setSaveOption] = useState<"default" | "custom">("default");
   const [customPath, setCustomPath] = useState<string | null>(null);
-  const [workdir, setWorkdir] = useState<string>("");
   const [defaultSaveDir, setDefaultSaveDir] = useState<string>("");
 
   useEffect(() => {
     if (config) {
       const firstDomain = config.domains?.split(",")[0]?.trim() || "apache";
-      setFilename(`${firstDomain.replace(/\./g, "_")}.conf`);
+      setFilename(`${firstDomain}.conf`);
       setContent(generateApacheConf(config));
     }
   }, [config, generateApacheConf, open]);
 
   useEffect(() => {
     window.settingsAPI?.getWorkdir().then((dir) => {
-      setWorkdir(dir);
       setDefaultSaveDir(`${dir}/http-configs/apache`);
     });
     setSaveOption("default");

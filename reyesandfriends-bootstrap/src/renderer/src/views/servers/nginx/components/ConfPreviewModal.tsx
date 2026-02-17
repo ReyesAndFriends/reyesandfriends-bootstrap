@@ -1,6 +1,20 @@
+
 import { useEffect, useState } from "react";
 import { NginxConfig } from "../types";
 import useNginxServerUtils from "../useNginxServerUtils";
+
+declare global {
+  interface Window {
+    settingsAPI?: {
+      getWorkdir: () => Promise<string>;
+      setWorkdir: (path: string) => Promise<void>;
+      selectWorkdir: () => Promise<string | null>;
+      getDefaultWorkdir: () => Promise<string>;
+      openApacheConfigDir: () => Promise<string>;
+      openNginxConfigDir: () => Promise<string>;
+    };
+  }
+}
 
 function ConfPreviewModal({
   open,
@@ -18,20 +32,18 @@ function ConfPreviewModal({
   const [content, setContent] = useState("");
   const [saveOption, setSaveOption] = useState<"default" | "custom">("default");
   const [customPath, setCustomPath] = useState<string | null>(null);
-  const [workdir, setWorkdir] = useState<string>("");
   const [defaultSaveDir, setDefaultSaveDir] = useState<string>("");
 
   useEffect(() => {
     if (config) {
       const firstDomain = config.domains?.split(",")[0]?.trim() || "nginx";
-      setFilename(`${firstDomain.replace(/\./g, "_")}.conf`);
+      setFilename(`${firstDomain}.conf`); 
       setContent(generateNginxConf(config));
     }
   }, [config, generateNginxConf, open]);
 
   useEffect(() => {
     window.settingsAPI?.getWorkdir().then((dir) => {
-      setWorkdir(dir);
       setDefaultSaveDir(`${dir}/http-configs/nginx`);
     });
     setSaveOption("default");

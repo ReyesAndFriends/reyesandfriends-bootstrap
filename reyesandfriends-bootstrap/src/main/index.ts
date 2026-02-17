@@ -1,7 +1,10 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import "./main.ts";
+import "./databases/mysql/ipc";
+import "./http-servers/apache/ipc";
+import "./http-servers/nginx/ipc";
+import "./settings/ipc";
 
 import { app, shell, BrowserWindow } from 'electron';
 import { join } from 'path';
