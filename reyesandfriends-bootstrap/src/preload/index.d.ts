@@ -59,6 +59,14 @@ import { ElectronAPI } from '@electron-toolkit/preload';
       fileExists: (filename: string, saveDir: string | null, dbName?: string) => Promise<boolean>;
       openScriptsDir: () => Promise<string>;
     };
-  }
-}
+
+    postgresqlScriptsAPI: {
+      getAll: () => Promise<any[]>;
       add: (script: any) => Promise<any[]>;
+      update: (index: number, script: any) => Promise<any[]>;
+      removeAt: (index: number) => Promise<any[]>;
+      generateSQLFile: (index: number, filename: string, content: string, saveDir: string | null) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+      fileExists: (filename: string, saveDir: string | null, dbName?: string) => Promise<boolean>;
+      openScriptsDir: () => Promise<string>;
+    };
+  }

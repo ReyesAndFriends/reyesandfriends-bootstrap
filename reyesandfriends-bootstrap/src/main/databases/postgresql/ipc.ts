@@ -1,3 +1,4 @@
+
 import { ipcMain } from "electron";
 import fs from "fs";
 import fsp from "fs/promises";
@@ -5,56 +6,56 @@ import path from "path";
 import { shell } from "electron";
 import { readConfig, getDefaultWorkdir, getConfigDir } from "../../settings/ipc"
 
-function mysqlScriptsDir() {
+function postgresqlScriptsDir() {
   const config = readConfig();
   const baseDir = config.workdir ? config.workdir : getDefaultWorkdir();
-  return path.join(baseDir, "databases", "mysql");
+  return path.join(baseDir, "databases", "postgresql");
 }
 
 const configDir = getConfigDir();
-const mysqlScriptsListPath = () => path.join(configDir, "mysql_scripts.json");
+const postgresqlScriptsListPath = () => path.join(configDir, "postgresql_scripts.json");
 
-function ensureMySQLScripts() {
+function ensurePostgreSQLScripts() {
   if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
-  const listPath = mysqlScriptsListPath();
+  const listPath = postgresqlScriptsListPath();
   if (!fs.existsSync(listPath)) fs.writeFileSync(listPath, JSON.stringify([], null, 2));
 }
 
-function readMySQLScripts() {
-  ensureMySQLScripts();
-  return JSON.parse(fs.readFileSync(mysqlScriptsListPath(), "utf-8"));
+function readPostgreSQLScripts() {
+  ensurePostgreSQLScripts();
+  return JSON.parse(fs.readFileSync(postgresqlScriptsListPath(), "utf-8"));
 }
 
-function writeMySQLScripts(data: any) {
-  ensureMySQLScripts();
-  fs.writeFileSync(mysqlScriptsListPath(), JSON.stringify(data, null, 2));
+function writePostgreSQLScripts(data: any) {
+  ensurePostgreSQLScripts();
+  fs.writeFileSync(postgresqlScriptsListPath(), JSON.stringify(data, null, 2));
 }
 
-ipcMain.handle("mysqlScripts:getAll", async () => {
-  return readMySQLScripts();
+ipcMain.handle("postgresqlScripts:getAll", async () => {
+  return readPostgreSQLScripts();
 });
 
-ipcMain.handle("mysqlScripts:add", async (_event, script) => {
-  const scripts = readMySQLScripts();
+ipcMain.handle("postgresqlScripts:add", async (_event, script) => {
+  const scripts = readPostgreSQLScripts();
   scripts.push(script);
-  writeMySQLScripts(scripts);
+  writePostgreSQLScripts(scripts);
   return scripts;
 });
 
-ipcMain.handle("mysqlScripts:update", async (_event, index: number, script) => {
-  const scripts = readMySQLScripts();
+ipcMain.handle("postgresqlScripts:update", async (_event, index: number, script) => {
+  const scripts = readPostgreSQLScripts();
   if (index >= 0 && index < scripts.length) {
     scripts[index] = script;
-    writeMySQLScripts(scripts);
+    writePostgreSQLScripts(scripts);
   }
   return scripts;
 });
 
-ipcMain.handle("mysqlScripts:removeAt", async (_event, index: number) => {
-  const scripts = readMySQLScripts();
+ipcMain.handle("postgresqlScripts:removeAt", async (_event, index: number) => {
+  const scripts = readPostgreSQLScripts();
   if (index >= 0 && index < scripts.length) {
     const script = scripts[index];
-    const sqlDir = path.join(mysqlScriptsDir(), script.dbName);
+    const sqlDir = path.join(postgresqlScriptsDir(), script.dbName);
     try {
       if (fs.existsSync(sqlDir)) {
         // Eliminar todos los archivos y subcarpetas dentro de sqlDir
@@ -75,20 +76,20 @@ ipcMain.handle("mysqlScripts:removeAt", async (_event, index: number) => {
       }
     } catch {}
     scripts.splice(index, 1);
-    writeMySQLScripts(scripts);
+    writePostgreSQLScripts(scripts);
   }
   return scripts;
 });
 
-ipcMain.handle("mysqlScripts:generateSQLFile", async (_event, index: number, filename: string, content: string, saveDir: string | null) => {
-  const scripts = readMySQLScripts();
+ipcMain.handle("postgresqlScripts:generateSQLFile", async (_event, index: number, filename: string, content: string, saveDir: string | null) => {
+  const scripts = readPostgreSQLScripts();
   if (index < 0 || index >= scripts.length) return { success: false, error: "Índice inválido" };
   const dbName = scripts[index].dbName;
   let targetDir = saveDir;
   if (!targetDir) {
     const config = readConfig();
     const baseDir = config.workdir ? config.workdir : getDefaultWorkdir();
-    targetDir = path.join(baseDir, "databases", "mysql", dbName);
+    targetDir = path.join(baseDir, "databases", "postgresql", dbName);
   } else {
     targetDir = path.join(targetDir, dbName);
   }
@@ -102,12 +103,12 @@ ipcMain.handle("mysqlScripts:generateSQLFile", async (_event, index: number, fil
   }
 });
 
-ipcMain.handle("mysqlScripts:fileExists", async (_event, filename: string, saveDir: string | null, dbName?: string) => {
+ipcMain.handle("postgresqlScripts:fileExists", async (_event, filename: string, saveDir: string | null, dbName?: string) => {
   let targetDir = saveDir;
   if (!targetDir) {
     const config = readConfig();
     const baseDir = config.workdir ? config.workdir : getDefaultWorkdir();
-    targetDir = path.join(baseDir, "databases", "mysql", dbName || "");
+    targetDir = path.join(baseDir, "databases", "postgresql", dbName || "");
   } else {
     targetDir = path.join(targetDir, dbName || "");
   }
@@ -120,8 +121,8 @@ ipcMain.handle("mysqlScripts:fileExists", async (_event, filename: string, saveD
   }
 });
 
-ipcMain.handle("mysqlScripts:openScriptsDir", async () => {
-  const dir = mysqlScriptsDir();
+ipcMain.handle("postgresqlScripts:openScriptsDir", async () => {
+  const dir = postgresqlScriptsDir();
   await fsp.mkdir(dir, { recursive: true });
   return shell.openPath(dir);
 });

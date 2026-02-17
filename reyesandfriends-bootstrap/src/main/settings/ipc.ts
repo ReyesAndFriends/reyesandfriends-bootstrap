@@ -3,10 +3,11 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 
-const configDir = getConfigDir();
-const configPath = path.join(configDir, "settings.json");
 
-function getConfigDir() {
+export const configDir = getConfigDir();
+export const configPath = path.join(configDir, "settings.json");
+
+export function getConfigDir() {
   const home = os.homedir();
   const platform = os.platform();
   if (platform === "win32") {
@@ -18,7 +19,7 @@ function getConfigDir() {
   }
 }
 
-function getDefaultWorkdir() {
+export function getDefaultWorkdir() {
   const home = os.homedir();
   if (os.platform() === "win32") {
     return path.join(home, "Documents", "reyesandfriends-bootstrap");
@@ -27,7 +28,7 @@ function getDefaultWorkdir() {
   }
 }
 
-function ensureConfig() {
+export function ensureConfig() {
   if (!fs.existsSync(configDir)) {
     fs.mkdirSync(configDir, { recursive: true });
   }
@@ -36,12 +37,12 @@ function ensureConfig() {
   }
 }
 
-function readConfig() {
+export function readConfig() {
   ensureConfig();
   return JSON.parse(fs.readFileSync(configPath, "utf-8"));
 }
 
-function writeConfig(config: any) {
+export function writeConfig(config: any) {
   ensureConfig();
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 }

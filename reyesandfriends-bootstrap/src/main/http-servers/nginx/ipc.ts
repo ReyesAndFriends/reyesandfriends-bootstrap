@@ -2,7 +2,7 @@ import { ipcMain, shell } from "electron";
 import fs from "fs";
 import fsp from "fs/promises";
 import path from "path";
-import { getConfigDir } from "../../settings/utils";
+import { getConfigDir } from "../../settings/ipc";
 
 const configDir = getConfigDir();
 const nginxServersPath = path.join(configDir, "nginx_servers.json");
