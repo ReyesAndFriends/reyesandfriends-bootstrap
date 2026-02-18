@@ -31,8 +31,9 @@ const About: React.FC = () => (
       >
         <div className="callout primary">
           <h4>Reyes & Friends - Bootstrap</h4>
+            <small style={{ display: "block", marginBottom: 8, textAlign: "center" }}>Versión 1.0.0</small>
           <p>
-            Aplicación desarrollada por <strong>Marcos Reyes</strong> y Reyes&Friends.
+            Aplicación desarrollada por <Link to="https://github.com/AstronautMarkus" target="_blank"><strong>AstronautMarkusDev (Marcos Reyes)</strong></Link> para <Link to="https://www.reyesandfriends.cl" target="_blank"><strong>Reyes&Friends</strong></Link> y la comunidad de usuarios.
           </p>
           <p>
             Esta aplicación está diseñada para facilitar la gestión de proyectos y configuraciones en un entorno de escritorio. Proporciona una interfaz sencilla y eficiente para usuarios que buscan una solución fácil de usar.
