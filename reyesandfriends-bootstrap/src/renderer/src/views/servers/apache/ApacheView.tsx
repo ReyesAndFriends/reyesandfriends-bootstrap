@@ -6,6 +6,30 @@ import ConfPreviewModal from "./components/ConfPreviewModal";
 import OverwriteModal from "@renderer/components/HttpConfigs/OverWriteModal";
 import Toast from "@renderer/components/Toast";
 
+declare global {
+  interface Window {
+    apacheServersAPI: {
+      getAll: () => Promise<any[]>;
+      add: (config: any) => Promise<any[]>;
+      saveAll: (configs: any[]) => Promise<any[]>;
+      removeAt: (index: number) => Promise<any[]>;
+      saveConfFile: (
+        filename: string,
+        content: string,
+        saveDir: string | null,
+        domains?: string
+      ) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+      fileExists: (
+        filename: string,
+        saveDir: string | null,
+        domains?: string
+      ) => Promise<boolean>;
+    };
+  }
+}
+export {};
+
+
 function ApacheView() {
   const [rows, setRows] = useState<ApacheConfig[]>([]);
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
@@ -283,7 +307,7 @@ function ApacheView() {
               filename,
               content,
               saveDir,
-              confPreviewConfig?.domains // <-- PASAR DOMAINS AQUÍ
+              confPreviewConfig?.domains
             );
             if (res.success) {
               showToast(`Archivo guardado en:\n${res.filePath}`, "success");

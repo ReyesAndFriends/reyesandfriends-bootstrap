@@ -6,6 +6,29 @@ import OverwriteModal from "@renderer/components/DatabaseConfigs/OverWriteModal"
 import Toast from "@renderer/components/Toast";
 import { generateMySQLScript } from "./useMySQLDatabaseUtils";
 
+declare global {
+    interface Window {
+        mysqlScriptsAPI: {
+            getAll: () => Promise<any[]>;
+            add: (config: any) => Promise<any[]>;
+            update: (index: number, config: any) => Promise<any[]>;
+            removeAt: (index: number) => Promise<any[]>;
+            generateSQLFile: (
+                index: number,
+                filename: string,
+                content: string,
+                saveDir: string | null
+            ) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+            fileExists: (
+                filename: string,
+                saveDir: string | null,
+                dbName?: string
+            ) => Promise<boolean>;
+            openScriptsDir: () => void;
+        };
+    }
+}
+
 function MySQLView() {
     // Estado para la lista de scripts
     const [rows, setRows] = useState<any[]>([]);
@@ -194,7 +217,6 @@ function MySQLView() {
                 </div>
             </div>
 
-            {/* Modales y Toast */}
             <MySQLScriptModal
                 open={modalOpen}
                 onClose={() => {
