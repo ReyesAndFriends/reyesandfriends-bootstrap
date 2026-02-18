@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const About: React.FC = () => (
   <>
@@ -44,7 +45,7 @@ const About: React.FC = () => (
           </p>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <button
-              className="button tiny secondary"
+              className="button tiny warning"
               onClick={() =>
           window.open(
             "https://github.com/reyesandfriends/reyesandfriends-bootstrap/blob/main/LICENSE",
@@ -65,6 +66,20 @@ const About: React.FC = () => (
               <li>Open Source contributors</li>
             </ul>
           </div>
+
+          <div className="callout info">
+            <h5>Términos y Condiciones</h5>
+            <ul style={{ marginBottom: 0 }}>
+              <li>Se pide explicitamente a los usuarios que lean los términos y condiciones antes de usar la aplicación.</li>
+              <li>El uso de esta aplicación implica la aceptación de los términos y condiciones establecidos.</li>
+              <li>Los términos y condiciones pueden ser actualizados periódicamente, por lo que se recomienda revisarlos regularmente.</li>
+                <li style={{ textAlign: "center", marginTop: 16, listStyle: "none" }}>
+                  <Link to="/terms-and-conditions" className="button info">Leer términos y condiciones</Link>
+              </li>
+            </ul>
+          </div>
+
+
           <div className="callout warning">
             <h5>Tecnologías utilizadas</h5>
             <div className="grid-x grid-margin-x align-center-middle" style={{ marginTop: 16 }}>
@@ -119,10 +134,6 @@ const About: React.FC = () => (
 
             </div>
           </div>
-        </div>
-
-        <div className="text-center">
-          <small>© {new Date().getFullYear()} Reyes&Friends</small>
         </div>
 
       </div>

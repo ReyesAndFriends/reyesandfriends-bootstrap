@@ -130,6 +130,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           }}
         >
           {children}
+
+          <div style={{ marginTop: 40, textAlign: "center" }}>
+            <small><strong>© {new Date().getFullYear()} Reyes&Friends</strong></small>
+          </div>
+          
         </main>
       </div>
     </div>

@@ -114,7 +114,12 @@ function Home() {
           marginRight: 'auto'
         }}
       >
-        <strong>Nota importante:</strong> Esta aplicación es una herramienta de apoyo para desarrolladores y administradores de sistemas, puede contener errores o generar configuraciones que requieran ajustes adicionales. Nunca dependas completamente de las configuraciones generadas sin revisarlas cuidadosamente. <br /><br /> Siempre verifica y ajusta las configuraciones según las necesidades específicas de tu entorno antes de implementarlas en producción!
+        <strong>Nota importante:</strong> Esta aplicación es una herramienta de apoyo para desarrolladores y administradores de sistemas, puede contener errores o generar configuraciones que requieran ajustes adicionales.
+        Nunca dependas completamente de las configuraciones generadas sin revisarlas cuidadosamente. 
+        <br /><br /> Siempre verifica y ajusta las configuraciones según las necesidades específicas
+        de tu entorno antes de implementarlas en producción!
+        <br /><br />
+        Se recomienda leer los <Link to="/terms-and-conditions"><strong>Términos y Condiciones</strong></Link> antes de utilizar la aplicación. Se considera que al utilizar la aplicación, el usuario acepta los términos y condiciones establecidos en dicho documento.
       </div>
 
     </>

@@ -6,6 +6,7 @@ import Servers from '../views/Servers'
 import Databases from '../views/Databases'
 import Preferences from '../views/Preferences'
 import About from '../views/About'
+import TermsAndConditions from '@renderer/views/TermsAndConditions'
 
 import ApacheView from '@renderer/views/servers/apache/ApacheView'
 import NginxView from '@renderer/views/servers/nginx/NginxView'
@@ -191,8 +192,24 @@ const AppRoutes = () => {
             </motion.div>
           }
         />
-      </Routes>
 
+        <Route
+          path="/terms-and-conditions"
+          element={
+            <motion.div
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: "tween", duration: 0.2 }}
+            >
+              <TermsAndConditions />
+            </motion.div>
+          }
+        />
+
+      </Routes>
+      
     </AnimatePresence>
   );
 };
