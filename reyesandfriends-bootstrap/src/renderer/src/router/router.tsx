@@ -13,6 +13,8 @@ import NginxView from '@renderer/views/servers/nginx/NginxView'
 import MySQLView from '@renderer/views/databases/mysql/MySQLView'
 import PostgreSQLView from '@renderer/views/databases/postgresql/PostgreSQLView'
 
+import FlaskView from '@renderer/views/secrets/flask/FlaskView'
+
 import SecretKeys from '@renderer/views/SecretKeys'
 
 const pageVariants = {
@@ -142,6 +144,21 @@ const AppRoutes = () => {
               transition={{ type: "tween", duration: 0.2 }}
             >
               <SecretKeys />
+            </motion.div>
+          }
+        />
+
+        <Route
+          path="/secret-keys/flask"
+          element={
+            <motion.div
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ type: "tween", duration: 0.2 }}
+            >
+              <FlaskView />
             </motion.div>
           }
         />

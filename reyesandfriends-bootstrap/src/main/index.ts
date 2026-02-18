@@ -3,8 +3,12 @@ dotenv.config();
 
 import "./databases/mysql/ipc";
 import "./databases/postgresql/ipc";
+
 import "./http-servers/apache/ipc";
 import "./http-servers/nginx/ipc";
+
+import "./secrets/flask/ipc";
+
 import "./settings/ipc";
 
 import { app, shell, BrowserWindow } from 'electron';

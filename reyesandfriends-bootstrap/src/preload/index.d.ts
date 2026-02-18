@@ -69,4 +69,12 @@ import { ElectronAPI } from '@electron-toolkit/preload';
       fileExists: (filename: string, saveDir: string | null, dbName?: string) => Promise<boolean>;
       openScriptsDir: () => Promise<string>;
     };
+
+    flaskKeysAPI: {
+      getAll: () => Promise<any>;
+      saveAll: (data: any) => Promise<void>;
+      add: (key: { name: string; value: string }) => Promise<any>;
+      removeAt: (index: number) => Promise<any>;
+      openDir: () => Promise<void>;
+    };
   }
