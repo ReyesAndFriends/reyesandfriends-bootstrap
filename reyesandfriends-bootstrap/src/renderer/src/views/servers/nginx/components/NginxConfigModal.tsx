@@ -80,7 +80,12 @@ function NginxConfigModal({
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label>
             Dominios (separados por coma):
-            <input type="text" value={domains} onChange={e => setDomains(e.target.value)} />
+            <input
+              type="text"
+              placeholder="Ej: midominio.com, www.otrodominio.com"
+              value={domains}
+              onChange={e => setDomains(e.target.value)}
+            />
           </label>
           <label>
             <input type="checkbox" checked={http} onChange={e => setHttp(e.target.checked)} />
@@ -92,7 +97,13 @@ function NginxConfigModal({
           </label>
           <label style={{ opacity: showProxy ? 0.5 : 1 }}>
             Path del sitio (root):
-            <input type="text" value={path} onChange={e => setPath(e.target.value)} disabled={showProxy} />
+            <input
+              type="text"
+              placeholder="Ej: /var/www/html, /srv/misitio"
+              value={path}
+              onChange={e => setPath(e.target.value)}
+              disabled={showProxy}
+            />
           </label>
           <label style={{ opacity: https ? 1 : 0.5 }}>
             Certificado SSL:
@@ -106,11 +117,11 @@ function NginxConfigModal({
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <label>
                 Ruta del certificado (.crt/.pem):
-                <input type="text" placeholder="/ruta/cert.pem" value={sslCustomCert} onChange={e => setSslCustomCert(e.target.value)} disabled={!showSslCustom} />
+                <input type="text" placeholder="Ej: /etc/ssl/certs/misitio.pem" value={sslCustomCert} onChange={e => setSslCustomCert(e.target.value)} disabled={!showSslCustom} />
               </label>
               <label>
                 Ruta de la clave privada (.key):
-                <input type="text" placeholder="/ruta/key.pem" value={sslCustomKey} onChange={e => setSslCustomKey(e.target.value)} disabled={!showSslCustom} />
+                <input type="text" placeholder="Ej: /etc/ssl/private/misitio.key" value={sslCustomKey} onChange={e => setSslCustomKey(e.target.value)} disabled={!showSslCustom} />
               </label>
             </div>
           )}
@@ -130,7 +141,13 @@ function NginxConfigModal({
           </div>
           <label style={{ opacity: showProxy ? 1 : 0.5 }}>
             Proxy destino (IP:PUERTO):
-            <input type="text" placeholder="127.0.0.1:3000" value={proxyTarget} onChange={e => setProxyTarget(e.target.value)} disabled={!showProxy} />
+            <input
+              type="text"
+              placeholder="Ej: 127.0.0.1:3000, api.midominio.com:8080"
+              value={proxyTarget}
+              onChange={e => setProxyTarget(e.target.value)}
+              disabled={!showProxy}
+            />
           </label>
         </div>
         {error && <div className="callout alert" style={{ marginTop: 16, marginBottom: 0 }}>{error}</div>}

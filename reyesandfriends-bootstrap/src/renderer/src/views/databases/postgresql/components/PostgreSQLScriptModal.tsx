@@ -68,17 +68,28 @@ function PostgreSQLScriptModal({
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label>
             Nombre de la base de datos:
-            <input type="text" value={dbName} onChange={e => { setDbName(e.target.value); setTouched(true); }} />
+            <input
+              type="text"
+              placeholder="ej: mi_programa_produccion"
+              value={dbName}
+              onChange={e => { setDbName(e.target.value); setTouched(true); }}
+            />
           </label>
           <label>
             Usuario:
-            <input type="text" value={userName} onChange={e => { setUserName(e.target.value); setTouched(true); }} />
+            <input
+              type="text"
+              placeholder="Nombre de usuario para la base de datos (ej: usuario_app, admin, lector)"
+              value={userName}
+              onChange={e => { setUserName(e.target.value); setTouched(true); }}
+            />
           </label>
           <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             Contraseña:
             <div style={{ display: "flex", alignItems: "center" }}>
               <input
                 type={showPassword ? "text" : "password"}
+                placeholder="Contraseña segura para el usuario (ej: 8-16 caracteres, letras y números)"
                 value={userPassword}
                 onChange={e => { setUserPassword(e.target.value); setTouched(true); }}
                 style={{ flex: 1 }}
@@ -113,7 +124,12 @@ function PostgreSQLScriptModal({
           </label>
           <label>
             Privilegios:
-            <input type="text" value={privileges} onChange={e => { setPrivileges(e.target.value); setTouched(true); }} />
+            <input
+              type="text"
+              placeholder="Ej: CREATE, CONNECT, TEMPORARY, SELECT, INSERT (separados por coma)"
+              value={privileges}
+              onChange={e => { setPrivileges(e.target.value); setTouched(true); }}
+            />
           </label>
           <label>
             Host:
@@ -123,12 +139,22 @@ function PostgreSQLScriptModal({
               <option value="custom">personalizado</option>
             </select>
             {host === "custom" && (
-              <input type="text" placeholder="Ej: 192.168.1.100" value={customHost} onChange={e => { setCustomHost(e.target.value); setTouched(true); }} />
+              <input
+                type="text"
+                placeholder="Dirección IP o hostname permitido (ej: 192.168.1.100, servidor.midominio.com)"
+                value={customHost}
+                onChange={e => { setCustomHost(e.target.value); setTouched(true); }}
+              />
             )}
           </label>
           <label>
             Codificación (charset):
-            <input type="text" value={charset} onChange={e => { setCharset(e.target.value); setTouched(true); }} />
+            <input
+              type="text"
+              placeholder="Ej: UTF8 (por defecto)"
+              value={charset}
+              onChange={e => { setCharset(e.target.value); setTouched(true); }}
+            />
           </label>
         </div>
         {error && (
