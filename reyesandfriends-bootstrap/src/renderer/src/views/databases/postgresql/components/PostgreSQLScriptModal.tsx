@@ -27,6 +27,8 @@ function PostgreSQLScriptModal({
   const [preset, setPreset] = useState(initialData?.preset ?? "personalizado");
   const [charset, setCharset] = useState(initialData?.charset ?? "UTF8");
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   useEffect(() => {
     setDbName(initialData?.dbName ?? "");
@@ -38,6 +40,8 @@ function PostgreSQLScriptModal({
     setCharset(initialData?.charset ?? "UTF8");
     setCustomHost("");
     setError(null);
+    setShowPassword(false);
+    setTouched(false);
   }, [open, initialData]);
 
   useEffect(() => {
@@ -64,27 +68,43 @@ function PostgreSQLScriptModal({
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label>
             Nombre de la base de datos:
-            <input type="text" value={dbName} onChange={e => setDbName(e.target.value)} />
+            <input type="text" value={dbName} onChange={e => { setDbName(e.target.value); setTouched(true); }} />
           </label>
           <label>
             Usuario:
-            <input type="text" value={userName} onChange={e => setUserName(e.target.value)} />
+            <input type="text" value={userName} onChange={e => { setUserName(e.target.value); setTouched(true); }} />
           </label>
-          <label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             Contraseña:
-            <input type="password" value={userPassword} onChange={e => setUserPassword(e.target.value)} />
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={userPassword}
+                onChange={e => { setUserPassword(e.target.value); setTouched(true); }}
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="button secondary"
+                style={{ marginLeft: 6, fontSize: 15, padding: "6px 18px", height: 36 }}
+                onClick={() => setShowPassword(v => !v)}
+                tabIndex={-1}
+              >
+                {showPassword ? "Ocultar" : "Mostrar"}
+              </button>
+            </div>
             <button
               type="button"
               className="button success"
-              style={{ marginLeft: 8 }}
-              onClick={() => setUserPassword(Math.random().toString(36).slice(-12))}
+              style={{ marginTop: 6, width: "fit-content", alignSelf: "flex-start", fontSize: 15, padding: "6px 18px", height: 36 }}
+              onClick={() => { setUserPassword(Math.random().toString(36).slice(-12)); setTouched(true); }}
             >
               Generar segura
             </button>
           </label>
           <label>
             Preset:
-            <select value={preset} onChange={e => setPreset(e.target.value)}>
+            <select value={preset} onChange={e => { setPreset(e.target.value); setTouched(true); }}>
               <option value="personalizado">Personalizado</option>
               <option value="produccion">Producción</option>
               <option value="desarrollo">Desarrollo</option>
@@ -93,22 +113,22 @@ function PostgreSQLScriptModal({
           </label>
           <label>
             Privilegios:
-            <input type="text" value={privileges} onChange={e => setPrivileges(e.target.value)} />
+            <input type="text" value={privileges} onChange={e => { setPrivileges(e.target.value); setTouched(true); }} />
           </label>
           <label>
             Host:
-            <select value={host} onChange={e => setHost(e.target.value)}>
+            <select value={host} onChange={e => { setHost(e.target.value); setTouched(true); }}>
               <option value="localhost">localhost</option>
               <option value="%">todos los hosts (%)</option>
               <option value="custom">personalizado</option>
             </select>
             {host === "custom" && (
-              <input type="text" placeholder="Ej: 192.168.1.100" value={customHost} onChange={e => setCustomHost(e.target.value)} />
+              <input type="text" placeholder="Ej: 192.168.1.100" value={customHost} onChange={e => { setCustomHost(e.target.value); setTouched(true); }} />
             )}
           </label>
           <label>
             Codificación (charset):
-            <input type="text" value={charset} onChange={e => setCharset(e.target.value)} />
+            <input type="text" value={charset} onChange={e => { setCharset(e.target.value); setTouched(true); }} />
           </label>
         </div>
         {error && (
@@ -118,7 +138,7 @@ function PostgreSQLScriptModal({
         )}
         <div style={{ marginTop: 24, textAlign: "right" }}>
           <button className="button secondary" type="button" onClick={onClose}>Cerrar</button>
-          <button className="button primary" type="button" style={{ marginLeft: 8 }} disabled={!!error} onClick={() => {
+          <button className="button primary" type="button" style={{ marginLeft: 8 }} disabled={!touched || !!error} onClick={() => {
             if (onSave && !error) {
               onSave({ dbName, userName, userPassword, privileges, host: host === "custom" ? customHost : host, preset, charset });
               onClose();

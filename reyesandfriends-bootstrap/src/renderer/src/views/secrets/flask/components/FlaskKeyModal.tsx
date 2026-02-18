@@ -15,15 +15,18 @@ function FlaskKeyModal({
 	// Estados para los campos del formulario
 	const [name, setName] = useState(initialData?.name ?? "");
 	const [value, setValue] = useState(initialData?.value ?? "");
+	const [showValue, setShowValue] = useState(false);
 	const [description, setDescription] = useState(initialData?.description ?? "");
 	const [error, setError] = useState<string | null>(null);
 	const [saving, setSaving] = useState(false);
+	const [touched, setTouched] = useState(false);
 
 	useEffect(() => {
 		setName(initialData?.name ?? "");
 		setValue(initialData?.value ?? "");
 		setDescription(initialData?.description ?? "");
 		setError(null);
+		setTouched(false);
 	}, [open, initialData]);
 
 	// Validación básica
@@ -44,24 +47,57 @@ function FlaskKeyModal({
 				<div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 					<label>
 						Nombre:
-						<input type="text" value={name} onChange={e => setName(e.target.value)} disabled={saving} />
-					</label>
-					<label>
-						Valor:
-						<input type="text" value={value} onChange={e => setValue(e.target.value)} disabled={saving} />
-						<button
-							type="button"
-							className="button success"
-							style={{ marginLeft: 8 }}
-							onClick={() => setValue(Math.random().toString(36).slice(-24))}
+						<input
+							type="text"
+							placeholder="Nombre identificador de la clave (ej: SECRET_KEY, JWT_SECRET, API_KEY)"
+							value={name}
+							onChange={e => { setName(e.target.value); setTouched(true); }}
 							disabled={saving}
-						>
-							Generar segura
-						</button>
+						/>
+					</label>
+					<label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+						Valor:
+						<div style={{ display: "flex", alignItems: "center" }}>
+							<input
+								type={showValue ? "text" : "password"}
+								placeholder="Valor secreto (ej: cadena aleatoria, clave secreta, token, etc.)"
+								value={value}
+								onChange={e => { setValue(e.target.value); setTouched(true); }}
+								disabled={saving}
+								style={{ flex: 1 }}
+							/>
+							<button
+								type="button"
+								className="button secondary"
+								style={{ marginLeft: 6, fontSize: 15, padding: "6px 18px", height: 36 }}
+								onClick={() => setShowValue(v => !v)}
+								disabled={saving}
+								tabIndex={-1}
+							>
+								{showValue ? "Ocultar" : "Mostrar"}
+							</button>
+						</div>
+						<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+							<button
+								type="button"
+								className="button success"
+								style={{ marginTop: 6, width: "fit-content", alignSelf: "flex-start", fontSize: 15, padding: "6px 18px", height: 36 }}
+								onClick={() => { setValue(Math.random().toString(36).slice(-24)); setTouched(true); }}
+								disabled={saving}
+							>
+								Generar segura
+							</button>
+						</div>
 					</label>
 					<label>
 						Descripción:
-						<input type="text" value={description} onChange={e => setDescription(e.target.value)} disabled={saving} />
+						<input
+							type="text"
+							placeholder="Descripción opcional (ej: clave para JWT, clave de sesión, etc.)"
+							value={description}
+							onChange={e => { setDescription(e.target.value); setTouched(true); }}
+							disabled={saving}
+						/>
 					</label>
 				</div>
 				{error && (
@@ -75,7 +111,7 @@ function FlaskKeyModal({
 						className="button primary"
 						type="button"
 						style={{ marginLeft: 8 }}
-						disabled={!!error || saving}
+						disabled={!touched || !!error || saving}
 						onClick={async () => {
 							if (onSave && !error) {
 								setSaving(true);

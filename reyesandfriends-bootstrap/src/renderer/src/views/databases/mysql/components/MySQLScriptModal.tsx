@@ -21,11 +21,13 @@ function MySQLScriptModal({
   const [dbName, setDbName] = useState(initialData?.dbName ?? "");
   const [userName, setUserName] = useState(initialData?.userName ?? "");
   const [userPassword, setUserPassword] = useState(initialData?.userPassword ?? "");
+  const [showPassword, setShowPassword] = useState(false);
   const [privileges, setPrivileges] = useState(initialData?.privileges ?? "");
   const [host, setHost] = useState(initialData?.host ?? "localhost");
   const [preset, setPreset] = useState(initialData?.preset ?? "personalizado");
   const [charset, setCharset] = useState(initialData?.charset ?? "utf8mb4");
   const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
 
   useEffect(() => {
     setDbName(initialData?.dbName ?? "");
@@ -36,6 +38,7 @@ function MySQLScriptModal({
     setPreset(initialData?.preset ?? "personalizado");
     setCharset(initialData?.charset ?? "utf8mb4");
     setError(null);
+    setTouched(false);
   }, [open, initialData]);
 
   // Rellenar privilegios automáticamente según preset
@@ -65,27 +68,49 @@ function MySQLScriptModal({
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <label>
             Nombre de la base de datos:
-            <input type="text" value={dbName} onChange={e => setDbName(e.target.value)} />
+            <input type="text" placeholder="ej: mi_programa_produccion" value={dbName} onChange={e => { setDbName(e.target.value); setTouched(true); }} />
           </label>
           <label>
             Usuario:
-            <input type="text" value={userName} onChange={e => setUserName(e.target.value)} />
+            <input
+              type="text"
+              placeholder="Nombre de usuario para la base de datos (ej: usuario_app, admin, lector)"
+              value={userName}
+              onChange={e => { setUserName(e.target.value); setTouched(true); }}
+            />
           </label>
-          <label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             Contraseña:
-            <input type="password" value={userPassword} onChange={e => setUserPassword(e.target.value)} />
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Contraseña segura para el usuario (ej: 8-16 caracteres, letras y números)"
+                value={userPassword}
+                onChange={e => { setUserPassword(e.target.value); setTouched(true); }}
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="button secondary"
+                style={{ marginLeft: 6, fontSize: 15, padding: "6px 18px", height: 36 }}
+                onClick={() => setShowPassword(v => !v)}
+                tabIndex={-1}
+              >
+                {showPassword ? "Ocultar" : "Mostrar"}
+              </button>
+            </div>
             <button
               type="button"
               className="button success"
-              style={{ marginLeft: 8 }}
-              onClick={() => setUserPassword(Math.random().toString(36).slice(-12))}
+              style={{ marginTop: 6, width: "fit-content", alignSelf: "flex-start", fontSize: 15, padding: "6px 18px", height: 36 }}
+              onClick={() => { setUserPassword(Math.random().toString(36).slice(-12)); setTouched(true); }}
             >
               Generar segura
             </button>
           </label>
           <label>
             Preset:
-            <select value={preset} onChange={e => setPreset(e.target.value)}>
+            <select value={preset} onChange={e => { setPreset(e.target.value); setTouched(true); }}>
               <option value="personalizado">personalizado</option>
               <option value="produccion">producción</option>
               <option value="desarrollo">desarrollo</option>
@@ -94,22 +119,32 @@ function MySQLScriptModal({
           </label>
           <label>
             Privilegios:
-            <input type="text" value={privileges} onChange={e => setPrivileges(e.target.value)} />
+            <input
+              type="text"
+              placeholder="Ej: SELECT, INSERT, UPDATE, DELETE (separados por coma)"
+              value={privileges}
+              onChange={e => { setPrivileges(e.target.value); setTouched(true); }}
+            />
           </label>
           <label>
             Host:
-            <select value={host} onChange={e => setHost(e.target.value)}>
+            <select value={host} onChange={e => { setHost(e.target.value); setTouched(true); }}>
               <option value="localhost">localhost</option>
               <option value="%">todos los hosts (%)</option>
               <option value="custom">personalizado</option>
             </select>
             {host === "custom" && (
-              <input type="text" placeholder="Ej: 192.168.1.100" value={host !== "localhost" && host !== "%" ? host : ""} onChange={e => setHost(e.target.value)} />
+              <input
+                type="text"
+                placeholder="Dirección IP o hostname permitido (ej: 192.168.1.100, servidor.midominio.com)"
+                value={host !== "localhost" && host !== "%" ? host : ""}
+                onChange={e => { setHost(e.target.value); setTouched(true); }}
+              />
             )}
           </label>
           <label>
             Codificación (charset):
-            <select value={charset} onChange={e => setCharset(e.target.value)}>
+            <select value={charset} onChange={e => { setCharset(e.target.value); setTouched(true); }}>
               <option value="utf8mb4">UTF-8 multibyte (recomendado)</option>
               <option value="utf8">UTF-8</option>
               <option value="latin1">Latin1</option>
@@ -127,7 +162,7 @@ function MySQLScriptModal({
         )}
         <div style={{ marginTop: 24, textAlign: "right" }}>
           <button className="button secondary" type="button" onClick={onClose}>Cerrar</button>
-          <button className="button primary" type="button" style={{ marginLeft: 8 }} disabled={!!error} onClick={() => {
+          <button className="button primary" type="button" style={{ marginLeft: 8 }} disabled={!touched || !!error} onClick={() => {
             if (onSave && !error) {
               onSave({ dbName, userName, userPassword, privileges, host, preset, charset });
               onClose();
