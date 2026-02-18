@@ -6,22 +6,22 @@ function Home() {
       <div
         className="callout"
         style={{
-          background: 'linear-gradient(135deg, #7d0e0e 0%, rgb(132, 17, 17) 100%)',
+          background: 'linear-gradient(180deg, #8B0000 0%, #961832 25%, #9d2c2c 50%, #8B0000 75%, #660000 100%)',
           color: 'white',
           padding: 12
         }}
       >
         <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
           <img
-            src="/icons/app_icon.png"
-            alt="Icono"
-            style={{ width: 80, height: "auto", marginRight: 16, background: 'transparent' }}
+        src="/icons/app_icon.png"
+        alt="Icono"
+        style={{ width: 80, height: "auto", marginRight: 16, background: 'transparent' }}
           />
           <div>
-            <h2 style={{ color: 'white', fontSize: 22, margin: 0 }}>Reyes&Friends - Bootstrap</h2>
-            <p className="lead" style={{ color: 'white', fontSize: 16, margin: 0 }}>
-              Un gestor de utilidades para desarrolladores y administradores de sistemas para una puesta a producción rápida.
-            </p>
+        <h2 style={{ color: 'white', fontSize: 22, margin: 0 }}>Reyes&Friends - Bootstrap</h2>
+        <p className="lead" style={{ color: 'white', fontSize: 16, margin: 0 }}>
+          Un gestor de utilidades para desarrolladores y administradores de sistemas para una puesta a producción rápida.
+        </p>
           </div>
         </div>
       </div>

@@ -56,9 +56,7 @@ const About: React.FC = () => (
             </button>
           </div>
         </div>
-        <div className="text-center">
-          <small>© {new Date().getFullYear()} Reyes&Friends</small>
-        </div>
+
         <div style={{ marginTop: 40 }}>
           <div className="callout success">
             <h5>Agradecimientos</h5>
@@ -122,6 +120,11 @@ const About: React.FC = () => (
             </div>
           </div>
         </div>
+
+        <div className="text-center">
+          <small>© {new Date().getFullYear()} Reyes&Friends</small>
+        </div>
+
       </div>
     </div>
   </>
