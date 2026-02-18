@@ -77,13 +77,17 @@ function ApacheView() {
 
   const handleSave = async (data: ApacheConfig) => {
     if (editIndex === null) {
+      // Crear nueva configuración
       const newRows = await window.apacheServersAPI.add(data);
       setRows(newRows);
+      showToast("Configuración creada exitosamente.", "success");
     } else {
+      // Editar configuración existente
       const updatedRows = [...rows];
       updatedRows[editIndex] = data;
       await window.apacheServersAPI.saveAll(updatedRows);
       setRows(updatedRows);
+      showToast("Configuración editada exitosamente.", "success");
     }
     setEditIndex(null);
     setSelectedRow(null);
@@ -95,6 +99,7 @@ function ApacheView() {
       setRows(newRows);
       setSelectedRow(null);
       setDeleteModalOpen(false);
+      showToast("Configuración eliminada exitosamente.", "success");
     }
   };
 

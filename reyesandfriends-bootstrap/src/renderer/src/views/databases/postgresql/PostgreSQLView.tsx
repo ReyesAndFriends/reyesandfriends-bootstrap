@@ -64,6 +64,7 @@ function PostgreSQLView() {
     setModalOpen(false);
     setEditIndex(null);
     setSelectedRow(null);
+    showToast(`Script ${editIndex === null ? "creado" : "actualizado"} exitosamente.`);
   };
 
   const handleDelete = async () => {
@@ -72,6 +73,7 @@ function PostgreSQLView() {
     }
     setDeleteModalOpen(false);
     setSelectedRow(null);
+    showToast("Script eliminado exitosamente.", "success");
   };
 
   return (

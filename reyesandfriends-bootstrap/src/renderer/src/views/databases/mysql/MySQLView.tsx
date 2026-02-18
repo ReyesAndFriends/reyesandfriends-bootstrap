@@ -73,6 +73,7 @@ function MySQLView() {
         setModalOpen(false);
         setEditIndex(null);
         setSelectedRow(null);
+        showToast(`Script ${editIndex === null ? "creado" : "actualizado"} exitosamente.`);
     };
 
 
@@ -83,6 +84,7 @@ function MySQLView() {
         }
         setDeleteModalOpen(false);
         setSelectedRow(null);
+        showToast("Script eliminado exitosamente.", "success");
     };
 
     return (

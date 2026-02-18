@@ -67,11 +67,13 @@ function NginxView() {
 		if (editIndex === null) {
 			const newRows = await window.nginxServersAPI.add(data);
 			setRows(newRows);
+			showToast("Configuración creada exitosamente.", "success");
 		} else {
 			const updatedRows = [...rows];
 			updatedRows[editIndex] = data;
 			await window.nginxServersAPI.saveAll(updatedRows);
 			setRows(updatedRows);
+			showToast("Configuración editada exitosamente.", "success");
 		}
 		setEditIndex(null);
 		setSelectedRow(null);
@@ -83,6 +85,7 @@ function NginxView() {
 			setRows(newRows);
 			setSelectedRow(null);
 			setDeleteModalOpen(false);
+			showToast("Configuración eliminada exitosamente.", "success");
 		}
 	};
 
