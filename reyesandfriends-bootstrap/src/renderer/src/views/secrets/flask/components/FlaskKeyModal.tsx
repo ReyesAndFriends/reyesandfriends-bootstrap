@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { generateFlaskKeyAlphaNum } from "../useGenerateFlaskKey";
 import type { FlaskKey } from "../types";
 
 function FlaskKeyModal({
@@ -78,15 +79,15 @@ function FlaskKeyModal({
 							</button>
 						</div>
 						<div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-							<button
-								type="button"
-								className="button success"
-								style={{ marginTop: 6, width: "fit-content", alignSelf: "flex-start", fontSize: 15, padding: "6px 18px", height: 36 }}
-								onClick={() => { setValue(Math.random().toString(36).slice(-24)); setTouched(true); }}
-								disabled={saving}
-							>
-								Generar segura
-							</button>
+								<button
+									type="button"
+									className="button success"
+									style={{ marginTop: 6, width: "fit-content", alignSelf: "flex-start", fontSize: 15, padding: "6px 18px", height: 36 }}
+									onClick={() => { setValue(generateFlaskKeyAlphaNum(32)); setTouched(true); }}
+									disabled={saving}
+								>
+									Generar segura
+								</button>
 						</div>
 					</label>
 					<label>
