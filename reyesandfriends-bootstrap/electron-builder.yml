@@ -13,12 +13,14 @@ asarUnpack:
   - resources/**
 win:
   executableName: reyesandfriends-bootstrap
+  icon: resources/app_icon.ico
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 mac:
+  icon: resources/app_icon.icns
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -29,6 +31,10 @@ mac:
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:
+  executableName: reyesandfriends-bootstrap
+  icon: resources/app_icon.png
+  desktop:
+    StartupWMClass: reyesandfriends-bootstrap
   target:
     - AppImage
     - snap
