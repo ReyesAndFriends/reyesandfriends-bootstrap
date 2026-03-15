@@ -1,10 +1,10 @@
 {
   "name": "reyesandfriends-bootstrap",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "Un gestor de utilidades para desarrolladores y administradores de sistemas, para una puesta a producción rápida y eficiente.",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Reyes&Friends, AstronautMarkusDev",
+  "homepage": "https://bootstrap.reyesandfriends.cl",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
