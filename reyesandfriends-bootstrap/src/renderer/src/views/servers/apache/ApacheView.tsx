@@ -5,6 +5,7 @@ import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import ConfPreviewModal from "./components/ConfPreviewModal";
 import OverwriteModal from "@renderer/components/HttpConfigs/OverWriteModal";
 import Toast from "@renderer/components/Toast";
+import apacheIcon from "@renderer/icons/http-servers/apache.svg";
 
 declare global {
   interface Window {
@@ -108,7 +109,7 @@ function ApacheView() {
       <div className="grid-x align-middle" style={{ padding: "32px 0 0 0" }}>
         <div className="cell shrink" style={{ paddingLeft: 32 }}>
           <img
-            src="/icons/http-servers/apache.svg"
+            src={apacheIcon}
             alt="Apache"
             style={{ width: 56, height: 56, marginRight: 12, verticalAlign: "middle" }}
           />

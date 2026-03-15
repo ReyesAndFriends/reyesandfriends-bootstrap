@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import preferencesIcon from "@renderer/icons/preferences-desktop-icons.svg";
 
 declare global {
   interface Window {
@@ -74,7 +75,7 @@ const Preferences: React.FC = () => {
       <div className="callout" style={{ padding: 16 }}>
         <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
           <img
-            src="/icons/preferences-desktop-icons.svg"
+            src={preferencesIcon}
             alt="Inicio"
             style={{ width: 40, height: 40, marginRight: 16, background: 'transparent' }}
           />

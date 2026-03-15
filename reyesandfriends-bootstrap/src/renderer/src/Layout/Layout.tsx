@@ -1,13 +1,20 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import folderIcon from "@renderer/icons/folder.svg";
+import networkServerIcon from "@renderer/icons/network-server.svg";
+import sqliteBrowserIcon from "@renderer/icons/sqlitebrowser.svg";
+import lockIcon from "@renderer/icons/lock.svg";
+import preferencesIcon from "@renderer/icons/preferences-desktop-icons.svg";
+import helpAboutIcon from "@renderer/icons/help-about.svg";
+import panLeftIcon from "@renderer/icons/pan-left.svg";
 
 const sidebarButtons = [
-  { label: "Inicio", icon: "/icons/folder.svg", route: "/" },
-  { label: "Servidores HTTP", icon: "/icons/network-server.svg", route: "/http-servers" },
-  { label: "Bases de datos", icon: "/icons/sqlitebrowser.svg", route: "/databases" },
-  { label: "Claves secretas", icon: "/icons/lock.svg", route: "/secret-keys" },
-  { label: "Preferencias", icon: "/icons/preferences-desktop-icons.svg", route: "/preferences" },
-  { label: "Acerca de", icon: "/icons/help-about.svg", route: "/about" },
+  { label: "Inicio", icon: folderIcon, route: "/" },
+  { label: "Servidores HTTP", icon: networkServerIcon, route: "/http-servers" },
+  { label: "Bases de datos", icon: sqliteBrowserIcon, route: "/databases" },
+  { label: "Claves secretas", icon: lockIcon, route: "/secret-keys" },
+  { label: "Preferencias", icon: preferencesIcon, route: "/preferences" },
+  { label: "Acerca de", icon: helpAboutIcon, route: "/about" },
 ];
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -81,9 +88,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               onMouseOver={e => (e.currentTarget.style.background = "#31343b")}
               onMouseOut={e => (e.currentTarget.style.background = "#111")}
             >
-              {btn.icon.endsWith(".svg") ? (
-                <img src={btn.icon} alt={btn.label} style={{ width: 28, height: 28, objectFit: "contain" }} />
-              ) : null}
+              <img src={btn.icon} alt={btn.label} style={{ width: 28, height: 28, objectFit: "contain" }} />
               <span style={{ fontSize: "0.92rem", display: "block", wordBreak: "break-word" }}>{btn.label}</span>
             </Link>
           ))}
@@ -111,7 +116,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             onMouseOver={e => (e.currentTarget.style.background = "#31343b")}
             onMouseOut={e => (e.currentTarget.style.background = "#111")}
           >
-            <img src="/icons/pan-left.svg" alt="Volver" style={{ width: 22, height: 22, objectFit: "contain" }} />
+            <img src={panLeftIcon} alt="Volver" style={{ width: 22, height: 22, objectFit: "contain" }} />
             <span style={{ fontSize: "0.92rem" }}>Atrás</span>
           </button>
         </aside>

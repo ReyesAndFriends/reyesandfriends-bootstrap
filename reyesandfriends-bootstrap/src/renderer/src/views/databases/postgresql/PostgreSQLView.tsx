@@ -21,6 +21,7 @@ import SQLPreviewModal from "./components/SQLPreviewModal";
 import OverwriteModal from "@renderer/components/DatabaseConfigs/OverWriteModal";
 import Toast from "@renderer/components/Toast";
 import { usePostgreSQLDatabaseUtils, generatePostgreSQLScript } from "./usePostgreSQLDatabaseUtils";
+import postgresqlIcon from "@renderer/icons/databases/postgresql.svg";
 
 function PostgreSQLView() {
   // Estado para la lista de scripts
@@ -81,7 +82,7 @@ function PostgreSQLView() {
       <div className="grid-x align-middle" style={{ padding: "32px 0 0 0" }}>
         <div className="cell shrink" style={{ paddingLeft: 32 }}>
           <img
-            src="/icons/databases/postgresql.svg"
+            src={postgresqlIcon}
             alt="PostgreSQL"
             style={{ width: 56, height: 56, marginRight: 12, verticalAlign: "middle" }}
           />

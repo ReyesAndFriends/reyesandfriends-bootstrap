@@ -1,11 +1,12 @@
 import React from "react";
+import helpAboutIcon from "@renderer/icons/help-about.svg";
 
 const TermsAndConditions: React.FC = () => (
     <>
         <div className="callout" style={{ padding: 16 }}>
             <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
                 <img
-                    src="/icons/help-about.svg"
+                    src={helpAboutIcon}
                     alt="Acerca de"
                     style={{ width: 40, height: 40, marginRight: 16, background: 'transparent' }}
                 />

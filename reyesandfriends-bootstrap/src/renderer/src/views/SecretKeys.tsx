@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import lockIcon from "@renderer/icons/lock.svg";
+import flaskIcon from "@renderer/icons/secret-keys/flask.svg";
 
 function SecretKeys() {
   return (
@@ -6,7 +8,7 @@ function SecretKeys() {
       <div className="callout" style={{ padding: 16 }}>
         <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
           <img
-            src="/icons/lock.svg"
+            src={lockIcon}
             alt="Claves secretas"
             style={{ width: 40, height: 40, marginRight: 16, background: 'transparent' }}
           />
@@ -41,7 +43,7 @@ function SecretKeys() {
             }}
           >
             <img
-              src="/icons/secret-keys/flask.svg"
+              src={flaskIcon}
               alt="Flask"
               style={{ width: 56, height: 56, marginRight: 28 }}
             />

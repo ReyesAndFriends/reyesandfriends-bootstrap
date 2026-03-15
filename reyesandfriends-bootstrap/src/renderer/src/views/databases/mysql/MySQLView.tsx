@@ -5,6 +5,7 @@ import SQLPreviewModal from "./components/SQLPreviewModal";
 import OverwriteModal from "@renderer/components/DatabaseConfigs/OverWriteModal";
 import Toast from "@renderer/components/Toast";
 import { generateMySQLScript } from "./useMySQLDatabaseUtils";
+import mysqlIcon from "@renderer/icons/databases/mysql.svg";
 
 declare global {
     interface Window {
@@ -92,7 +93,7 @@ function MySQLView() {
             <div className="grid-x align-middle" style={{ padding: "32px 0 0 0" }}>
                 <div className="cell shrink" style={{ paddingLeft: 32 }}>
                     <img
-                        src="/icons/databases/mysql.svg"
+                        src={mysqlIcon}
                         alt="MySQL"
                         style={{ width: 56, height: 56, marginRight: 12, verticalAlign: "middle" }}
                     />

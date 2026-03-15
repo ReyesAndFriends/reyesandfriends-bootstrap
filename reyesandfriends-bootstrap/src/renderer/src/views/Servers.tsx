@@ -1,4 +1,7 @@
 import { Link } from "react-router-dom";
+import networkServerIcon from "@renderer/icons/network-server.svg";
+import apacheIcon from "@renderer/icons/http-servers/apache.svg";
+import nginxIcon from "@renderer/icons/http-servers/nginx.svg";
 
 function Servers() {
   return (
@@ -6,7 +9,7 @@ function Servers() {
       <div className="callout" style={{ padding: 16 }}>
         <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
           <img
-        src="/icons/network-server.svg"
+        src={networkServerIcon}
         alt="Servidor HTTP"
         style={{ width: 40, height: 40, marginRight: 16, background: 'transparent' }}
           />
@@ -41,7 +44,7 @@ function Servers() {
             }}
           >
             <img
-              src="/icons/http-servers/apache.svg"
+              src={apacheIcon}
               alt="Apache"
               style={{ width: 56, height: 56, marginRight: 28 }}
             />
@@ -62,7 +65,7 @@ function Servers() {
             }}
           >
             <img
-              src="/icons/http-servers/nginx.svg"
+              src={nginxIcon}
               alt="Nginx"
               style={{ width: 56, height: 56, marginRight: 28 }}
             />

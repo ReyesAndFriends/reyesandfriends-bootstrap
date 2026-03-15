@@ -1,4 +1,10 @@
 import { Link } from "react-router-dom";
+import appIcon from "@renderer/icons/app_icon.png";
+import folderIcon from "@renderer/icons/folder.svg";
+import networkServerIcon from "@renderer/icons/network-server.svg";
+import sqliteBrowserIcon from "@renderer/icons/sqlitebrowser.svg";
+import lockIcon from "@renderer/icons/lock.svg";
+import preferencesIcon from "@renderer/icons/preferences-desktop-icons.svg";
 
 function Home() {
   return (
@@ -13,7 +19,7 @@ function Home() {
       >
         <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
           <img
-        src="/icons/app_icon.png"
+        src={appIcon}
         alt="Icono"
         style={{ width: 80, height: "auto", marginRight: 16, background: 'transparent' }}
           />
@@ -29,7 +35,7 @@ function Home() {
       <div className="callout" style={{ padding: 16 }}>
         <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
           <img
-            src="/icons/folder.svg"
+            src={folderIcon}
             alt="Inicio"
             style={{ width: 40, height: 40, marginRight: 16, background: 'transparent' }}
           />
@@ -55,7 +61,7 @@ function Home() {
 
           <Link to="/http-servers" className="callout" style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
             <img
-              src="/icons/network-server.svg"
+              src={networkServerIcon}
               alt="Servidor"
               style={{ width: 40, height: 40, marginRight: 20 }}
             />
@@ -67,7 +73,7 @@ function Home() {
 
           <Link to="/databases" className="callout" style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
             <img
-              src="/icons/sqlitebrowser.svg"
+              src={sqliteBrowserIcon}
               alt="Base de datos"
               style={{ width: 40, height: 40, marginRight: 20 }}
             />
@@ -79,7 +85,7 @@ function Home() {
 
           <Link to="/secret-keys" className="callout" style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
             <img
-              src="/icons/lock.svg"
+              src={lockIcon}
               alt="Claves secretas"
               style={{ width: 40, height: 40, marginRight: 20 }}
             />
@@ -91,7 +97,7 @@ function Home() {
 
           <Link to="/preferences" className="callout" style={{ display: 'flex', alignItems: 'center' }}>
             <img
-              src="/icons/preferences-desktop-icons.svg"
+              src={preferencesIcon}
               alt="Herramientas"
               style={{ width: 40, height: 40, marginRight: 20 }}
             />

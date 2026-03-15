@@ -1,12 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import helpAboutIcon from "@renderer/icons/help-about.svg";
+import electronIcon from "@renderer/icons/electron.svg";
+import foundationIcon from "@renderer/icons/foundation-favicon.ico";
+import reactIcon from "@renderer/icons/react.svg";
 
 const About: React.FC = () => (
   <>
     <div className="callout" style={{ padding: 16 }}>
       <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
         <img
-          src="/icons/help-about.svg"
+          src={helpAboutIcon}
           alt="Acerca de"
           style={{ width: 40, height: 40, marginRight: 16, background: 'transparent' }}
         />
@@ -95,7 +99,7 @@ const About: React.FC = () => (
                   justifyContent: "center"
                 }}>
                   <div style={{ height: 40, marginBottom: 8 }}>
-                    <img src="/icons/electron.svg" alt="Electron" style={{ height: 40 }} />
+                    <img src={electronIcon} alt="Electron" style={{ height: 40 }} />
                   </div>
                   <strong>Electron</strong>
                 </div>
@@ -111,7 +115,7 @@ const About: React.FC = () => (
                   justifyContent: "center"
                 }}>
                   <div style={{ height: 40, marginBottom: 8 }}>
-                    <img src="/icons/foundation-favicon.ico" alt="Foundation CSS" style={{ height: 40 }} />
+                    <img src={foundationIcon} alt="Foundation CSS" style={{ height: 40 }} />
                   </div>
                   <strong>Foundation</strong>
                 </div>
@@ -127,7 +131,7 @@ const About: React.FC = () => (
                   justifyContent: "center"
                 }}>
                   <div style={{ height: 40, marginBottom: 8 }}>
-                    <img src="/icons/react.svg" alt="React" style={{ height: 40 }} />
+                    <img src={reactIcon} alt="React" style={{ height: 40 }} />
                   </div>
                   <strong>React</strong>
                 </div>

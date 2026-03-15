@@ -1,4 +1,7 @@
 import { Link } from "react-router-dom";
+import sqliteBrowserIcon from "@renderer/icons/sqlitebrowser.svg";
+import mysqlIcon from "@renderer/icons/databases/mysql.svg";
+import postgresqlIcon from "@renderer/icons/databases/postgresql.svg";
 
 function Databases() {
   return (
@@ -6,7 +9,7 @@ function Databases() {
       <div className="callout" style={{ padding: 16 }}>
         <div className="row column" style={{ display: 'flex', alignItems: 'center' }}>
           <img
-            src="/icons/sqlitebrowser.svg"
+            src={sqliteBrowserIcon}
             alt="Base de datos"
             style={{ width: 40, height: 40, marginRight: 16, background: 'transparent' }}
           />
@@ -41,7 +44,7 @@ function Databases() {
             }}
           >
             <img
-              src="/icons/databases/mysql.svg"
+              src={mysqlIcon}
               alt="MySQL"
               style={{ width: 56, height: 56, marginRight: 28 }}
             />
@@ -62,7 +65,7 @@ function Databases() {
             }}
           >
             <img
-              src="/icons/databases/postgresql.svg"
+              src={postgresqlIcon}
               alt="PostgreSQL"
               style={{ width: 56, height: 56, marginRight: 28 }}
             />

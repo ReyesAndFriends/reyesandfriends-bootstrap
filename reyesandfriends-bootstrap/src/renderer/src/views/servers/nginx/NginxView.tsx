@@ -5,6 +5,7 @@ import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import ConfPreviewModal from "./components/ConfPreviewModal";
 import OverwriteModal from "@renderer/components/HttpConfigs/OverWriteModal";
 import Toast from "@renderer/components/Toast";
+import nginxIcon from "@renderer/icons/http-servers/nginx.svg";
 
 declare global {
   interface Window {
@@ -93,7 +94,7 @@ function NginxView() {
 		<div>
 			<div className="grid-x align-middle" style={{ padding: "32px 0 0 0" }}>
 				<div className="cell shrink" style={{ paddingLeft: 32 }}>
-					<img src="/icons/http-servers/nginx.svg" alt="Nginx" style={{ width: 56, height: 56, marginRight: 12, verticalAlign: "middle" }} />
+					<img src={nginxIcon} alt="Nginx" style={{ width: 56, height: 56, marginRight: 12, verticalAlign: "middle" }} />
 				</div>
 				<div className="cell auto">
 					<h2 style={{ fontWeight: 600, fontSize: 28, margin: 0, verticalAlign: "middle" }}>Configuraciones Nginx</h2>

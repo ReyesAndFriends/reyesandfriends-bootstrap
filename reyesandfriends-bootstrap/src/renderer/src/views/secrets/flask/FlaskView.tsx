@@ -3,6 +3,7 @@ import FlaskKeyModal from "./components/FlaskKeyModal";
 import ConfirmDeleteModal from "./components/ConfirmDeleteModal";
 import Toast from "@renderer/components/Toast";
 import type { FlaskKey } from "./types";
+import flaskIcon from "@renderer/icons/secret-keys/flask.svg";
 
 
 declare global {
@@ -89,7 +90,7 @@ function FlaskView() {
             <div className="grid-x align-middle" style={{ padding: "32px 0 0 0" }}>
                 <div className="cell shrink" style={{ paddingLeft: 32 }}>
                     <img
-                        src="/icons/secret-keys/flask.svg"
+                        src={flaskIcon}
                         alt="Flask"
                         style={{ width: 56, height: 56, marginRight: 12, verticalAlign: "middle" }}
                     />
