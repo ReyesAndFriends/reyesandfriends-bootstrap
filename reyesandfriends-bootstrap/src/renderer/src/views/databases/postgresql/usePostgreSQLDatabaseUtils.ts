@@ -10,7 +10,6 @@ export function generatePostgreSQLScript(config: PostgreSQLScriptConfig) {
   const user = config.userName;
   const pass = config.userPassword;
   const privs = config.privileges;
-  const host = config.host || "localhost";
   const charset = config.charset || "UTF8";
   let sql = `CREATE DATABASE \"${db}\" ENCODING '${charset}';\n`;
   sql += `CREATE USER \"${user}\" WITH PASSWORD '${pass}';\n`;

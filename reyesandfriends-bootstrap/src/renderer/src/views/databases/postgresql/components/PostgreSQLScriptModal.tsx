@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 const PRESET_PRIVILEGES: Record<string, string> = {
   produccion: "CREATE, CONNECT, TEMPORARY, SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER",

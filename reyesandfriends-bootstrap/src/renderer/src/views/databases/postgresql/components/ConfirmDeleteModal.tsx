@@ -1,5 +1,3 @@
-import React from "react";
-
 function ConfirmDeleteModal({ open, onClose, onConfirm, dbName }: { open: boolean; onClose: () => void; onConfirm: () => void; dbName?: string; }) {
   if (!open) return null;
   return (
