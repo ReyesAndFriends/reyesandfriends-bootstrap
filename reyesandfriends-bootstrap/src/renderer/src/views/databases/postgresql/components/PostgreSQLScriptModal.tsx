@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { generatePostgreSQLPassword } from "../useGeneratePostgreSQLPassword";
 
 const PRESET_PRIVILEGES: Record<string, string> = {
   produccion: "CREATE, CONNECT, TEMPORARY, SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER",
@@ -108,7 +109,7 @@ function PostgreSQLScriptModal({
               type="button"
               className="button success"
               style={{ marginTop: 6, width: "fit-content", alignSelf: "flex-start", fontSize: 15, padding: "6px 18px", height: 36 }}
-              onClick={() => { setUserPassword(Math.random().toString(36).slice(-12)); setTouched(true); }}
+              onClick={() => { setUserPassword(generatePostgreSQLPassword(20)); setTouched(true); }}
             >
               Generar segura
             </button>
