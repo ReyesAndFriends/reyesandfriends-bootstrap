@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { generateMySQLPassword } from "../useGenerateMysqlPassword";
 
 const PRESET_PRIVILEGES: Record<string, string> = {
   produccion: "SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, TRIGGER, REFERENCES",
@@ -103,7 +104,7 @@ function MySQLScriptModal({
               type="button"
               className="button success"
               style={{ marginTop: 6, width: "fit-content", alignSelf: "flex-start", fontSize: 15, padding: "6px 18px", height: 36 }}
-              onClick={() => { setUserPassword(Math.random().toString(36).slice(-12)); setTouched(true); }}
+              onClick={() => { setUserPassword(generateMySQLPassword(20)); setTouched(true); }}
             >
               Generar segura
             </button>
