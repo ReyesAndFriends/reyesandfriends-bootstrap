@@ -45,10 +45,20 @@ function createWindow(): void {
     return { action: 'deny' };
   });
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
+  const rendererEntry = join(__dirname, '../renderer/index.html');
+  const rendererURL = process.env['ELECTRON_RENDERER_URL'];
+  const canUseRendererURL =
+    is.dev &&
+    typeof rendererURL === 'string' &&
+    rendererURL.trim().length > 0 &&
+    /^https?:\/\//i.test(rendererURL);
+
+  if (canUseRendererURL) {
+    mainWindow.loadURL(rendererURL).catch(() => {
+      mainWindow.loadFile(rendererEntry);
+    });
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
+    mainWindow.loadFile(rendererEntry);
   }
 }
 

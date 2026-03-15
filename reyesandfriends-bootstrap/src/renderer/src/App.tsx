@@ -1,15 +1,15 @@
 import './App.css'
 import Layout from './Layout/Layout'
-import { BrowserRouter } from 'react-router-dom'
+import { HashRouter } from 'react-router-dom'
 import AppRoutes from './router/router'
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Layout>
         <AppRoutes />
       </Layout>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 
